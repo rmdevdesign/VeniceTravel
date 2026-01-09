@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Week‑end à Venise — Plan + carte interactive</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    :root{--bg:#0b1220;--panel:#0f1a30;--card:#121f3a;--text:#e8eefc;--muted:#a9b7da;--accent:#7aa6ff;--ok:#66e3b4;--warn:#ffd37a;--bad:#ff7a7a;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(180deg,var(--bg),#070b14);color:var(--text);}
+    header{padding:18px 18px 0;}
+    .title{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+    .title h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .title .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted);font-size:12px}
+    .layout{display:grid;grid-template-columns:420px 1fr;gap:14px;padding:14px 14px 18px;min-height:calc(100vh - 72px)}
+    @media (max-width: 980px){.layout{grid-template-columns:1fr;}.map{order:-1;min-height:55vh}}
+    .panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .sidebar{padding:14px}
+    .card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px;margin:10px 0}
+    .card h2{margin:0 0 8px;font-size:14px;color:#dfe8ff;letter-spacing:.2px}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .meta b{color:var(--text);font-weight:600}
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(122,166,255,.12);color:var(--text);padding:9px 10px;border-radius:12px;font-weight:600;font-size:12px}
+    button.secondary{background:rgba(255,255,255,.06)}
+    button:active{transform:translateY(1px)}
+    .list{margin:8px 0 0;padding:0;list-style:none}
+    .item{display:flex;gap:10px;align-items:flex-start;padding:10px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12);margin:8px 0}
+    .badge{min-width:10px;height:10px;border-radius:999px;margin-top:6px;background:var(--accent);box-shadow:0 0 0 4px rgba(122,166,255,.14)}
+    .item .t{font-weight:650;font-size:13px;margin:0}
+    .item .d{margin:2px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+    .item .actions{margin-left:auto;display:flex;gap:8px}
+    .link{color:var(--accent);text-decoration:none}
+    .small{font-size:11px;color:var(--muted)}
+    .divider{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
+    #map{height:100%;min-height:520px}
+    .map{padding:0}
+    .note{padding:10px 12px;border-radius:14px;border:1px dashed rgba(255,255,255,.16);background:rgba(102,227,180,.08);color:#cfeee3;font-size:12px}
+    .warn{background:rgba(255,211,122,.09);border-style:solid;border-color:rgba(255,211,122,.22);color:#fff0d2}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .kpi .box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:10px}
+    .kpi .box .n{font-size:18px;font-weight:800}
+    .kpi .box .l{font-size:11px;color:var(--muted)}
+    .foot{padding:12px 14px;color:var(--muted);font-size:12px}
+    .chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);margin:6px 6px 0 0}
+    .chip span{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>Week‑end à Venise — votre plan + carte interactive</h1>
+      <div class="pill">✈️ Vol retour : <b>dimanche 20:00</b> • Départ hôtel conseillé : <b>~17:00</b> (arrivée aéroport ~18:00)</div>
+      <div class="pill">🏨 Hôtel : Calle Minelli, San Marco 1887/1888</div>
+      <div class="pill">🍽️ Samedi soir : Cannaregio, 1268</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="panel sidebar">
+      <div class="card">
+        <h2>Réservations (checklist)</h2>
+        <div class="note warn">Basilique Saint‑Marc : si aucun créneau dispo, entrée possible <b>sans réservation</b> → venez tôt pour limiter la file.</div>
+        <div class="kpi">
+          <div class="box"><div class="n">✅</div><div class="l">Dîner samedi soir : à réserver</div></div>
+          <div class="box"><div class="n">✅</div><div class="l">Palais des Doges : à réserver si vous le faites</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="small">Liens (officiels / utiles)</div>
+        <div style="margin-top:8px">
+          <span class="chip">🕍 <a class="link" href="https://www.basilicasanmarco.it/" target="_blank" rel="noopener">Basilique</a> <span>(site officiel)</span></span>
+          <span class="chip">🏛️ <a class="link" href="https://palazzoducale.visitmuve.it/" target="_blank" rel="noopener">Palais des Doges</a> <span>(MUVE)</span></span>
+          <span class="chip">🚌 <a class="link" href="https://www.atvo.it/" target="_blank" rel="noopener">Bus ATVO</a></span>
+          <span class="chip">🚍 <a class="link" href="https://actv.avmspa.it/" target="_blank" rel="noopener">ACTV</a></span>
+          <span class="chip">⛴️ <a class="link" href="https://www.alilaguna.it/" target="_blank" rel="noopener">Alilaguna</a></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Itinéraires carte (1 clic)</h2>
+        <div class="btnrow">
+          <button id="btnAll">Tout afficher</button>
+          <button class="secondary" id="btnFri">Vendredi</button>
+          <button class="secondary" id="btnSat">Samedi</button>
+          <button class="secondary" id="btnSun">Dimanche</button>
+          <button class="secondary" id="btnFood">Cicchetti & Bacari</button>
+          <button class="secondary" id="btnReturn">Retour aéroport</button>
+        </div>
+        <div class="divider"></div>
+        <div class="small">Astuce : cliquez un point sur la carte → bouton “Google Maps”.</div>
+      </div>
+
+      <div class="card">
+        <h2>Votre plan (récap propre)</h2>
+
+        <div class="item">
+          <div class="badge" style="background:#7aa6ff"></div>
+          <div>
+            <p class="t">Vendredi soir (arrivée ~21:00)</p>
+            <p class="d">Aéroport → Piazzale Roma (bus) → hôtel (vaporetto / marche). Dîner léger proche de l’hôtel si faim. Dodo tôt.</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="hotel">Voir hôtel</button></div>
+        </div>
+
+        <div class="item">
+          <div class="badge" style="background:#66e3b4"></div>
+          <div>
+            <p class="t">Samedi matin</p>
+            <p class="d">08:15 Place Saint‑Marc → 09:00 file basilique (sans résa) → visite → Campanile si ciel clair.</p>
+            <p class="d"><b>Objectif</b> : être au Rialto vers 12:00–12:30.</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="stmarks">Zoom St‑Marc</button></div>
+        </div>
+
+        <div class="item">
+          <div class="badge" style="background:#ffd37a"></div>
+          <div>
+            <p class="t">Samedi midi / après‑midi</p>
+            <p class="d">Cicchetti autour du Rialto (pas de résa) → Cannaregio / Castello → Libreria Acqua Alta → Santa Maria dei Miracoli (si ouverte).</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="rialto">Zoom Rialto</button></div>
+        </div>
+
+        <div class="item">
+          <div class="badge" style="background:#ff7ad9"></div>
+          <div>
+            <p class="t">Samedi soir</p>
+            <p class="d">Apéro bacaro à Cannaregio → <b>restaurant (Cannaregio 1268)</b> → balade de nuit.</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="restaurant">Zoom resto</button></div>
+        </div>
+
+        <div class="item">
+          <div class="badge" style="background:#9b7aff"></div>
+          <div>
+            <p class="t">Dimanche matin</p>
+            <p class="d">Option A : Palais des Doges + Pont des Soupirs. Option B : vaporetto ligne 1 sur le Grand Canal + balade Dorsoduro.</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="doge">Zoom Doges</button></div>
+        </div>
+
+        <div class="item">
+          <div class="badge" style="background:#ff7a7a"></div>
+          <div>
+            <p class="t">Dimanche retour (vol 20:00)</p>
+            <p class="d">Récup bagages → viser <b>départ hôtel ~17:00</b> → aéroport <b>~18:00</b>. Trajet conseillé : vaporetto vers Piazzale Roma → bus ATVO/ACTV → VCE.</p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="airport">Zoom aéroport</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Points ajoutés sur la carte</h2>
+        <ul class="list" id="poiList"></ul>
+      </div>
+
+      <div class="foot">Fonctionne hors compte : carte OpenStreetMap + Leaflet. Le géocodage utilise Nominatim (peut prendre 1–3 secondes au chargement).</div>
+    </section>
+
+    <section class="panel map">
+      <div id="map"></div>
+    </section>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    // --- Données du week-end ---
+    // On géocode côté navigateur (Nominatim) pour obtenir des points exacts.
+    // Fallback approx. si Nominatim est temporairement indispo.
+    const POIS = [
+      {
+        key: "airport",
+        name: "Aéroport Marco Polo (VCE)",
+        address: "Venice Marco Polo Airport, Tessera, Venezia, Italy",
+        fallback: [45.5053, 12.3519],
+        day: ["fri","return"],
+        emoji: "✈️",
+        note: "Arrivée vendredi / retour dimanche",
+      },
+      {
+        key: "piazzale",
+        name: "Piazzale Roma",
+        address: "Piazzale Roma, Venezia, Italy",
+        fallback: [45.4380, 12.3181],
+        day: ["fri","return"],
+        emoji: "🚌",
+        note: "Hub bus (ATVO/ACTV) + départ vaporetti",
+      },
+      {
+        key: "hotel",
+        name: "Hôtel (Duodo Palace) — Calle Minelli",
+        address: "Calle Minelli 1887/1888, 30124 Venezia VE, Italy",
+        fallback: [45.4339, 12.3320],
+        day: ["fri","sat","sun","return"],
+        emoji: "🏨",
+        note: "Votre base — San Marco",
+      },
+      {
+        key: "stmarks",
+        name: "Place & Basilique Saint‑Marc",
+        address: "Basilica di San Marco, Piazza San Marco, Venezia, Italy",
+        fallback: [45.4342, 12.3378],
+        day: ["sat"],
+        emoji: "🕍",
+        note: "Arriver tôt (sans résa = file)",
+      },
+      {
+        key: "campanile",
+        name: "Campanile de Saint‑Marc",
+        address: "Campanile di San Marco, Venezia, Italy",
+        fallback: [45.4340, 12.3390],
+        day: ["sat"],
+        emoji: "🔭",
+        note: "Vue panoramique (si beau temps)",
+      },
+      {
+        key: "rialto",
+        name: "Pont du Rialto",
+        address: "Rialto Bridge, Venezia, Italy",
+        fallback: [45.4380, 12.3358],
+        day: ["sat"],
+        emoji: "🌉",
+        note: "Zone cicchetti + balade Grand Canal",
+      },
+      {
+        key: "allarco",
+        name: "All’Arco (cicchetti)",
+        address: "Osteria All'Arco, Venezia, Italy",
+        fallback: [45.4384, 12.3353],
+        day: ["sat"],
+        emoji: "🥪",
+        note: "Cicchetti culte (souvent jusqu’à ~15h)",
+      },
+      {
+        key: "domori",
+        name: "Cantina Do Mori (cicchetti)",
+        address: "Cantina Do Mori, Venezia, Italy",
+        fallback: [45.4381, 12.3360],
+        day: ["sat"],
+        emoji: "🍷",
+        note: "Cicchetti près du Rialto",
+      },
+      {
+        key: "acquaalta",
+        name: "Libreria Acqua Alta",
+        address: "Libreria Acqua Alta, Venezia, Italy",
+        fallback: [45.4370, 12.3433],
+        day: ["sat"],
+        emoji: "📚",
+        note: "Incontournable (souvent bondé l’après‑midi)",
+      },
+      {
+        key: "miracoli",
+        name: "Santa Maria dei Miracoli",
+        address: "Chiesa di Santa Maria dei Miracoli, Venezia, Italy",
+        fallback: [45.4400, 12.3362],
+        day: ["sat"],
+        emoji: "⛪",
+        note: "Horaires parfois variables",
+      },
+      {
+        key: "restaurant",
+        name: "Restaurant samedi soir (Cannaregio 1268)",
+        address: "Cannaregio, 1268, 30121 Venezia VE, Italy",
+        fallback: [45.4440, 12.3253],
+        day: ["sat"],
+        emoji: "🍽️",
+        note: "Réservation conseillée",
+      },
+      {
+        key: "alparadiso",
+        name: "Al Timon / Vino Vero (bacari)",
+        address: "Fondamenta della Misericordia, Venezia, Italy",
+        fallback: [45.4473, 12.3269],
+        day: ["sat"],
+        emoji: "🍹",
+        note: "Apéro très local au bord de l’eau",
+      },
+      {
+        key: "cannaregiobar",
+        name: "Cantina Aziende Agricole (bacaro)",
+        address: "Fondamenta della Misericordia, Venezia, Italy",
+        fallback: [45.4470, 12.3274],
+        day: ["sat"],
+        emoji: "🍷",
+        note: "Spritz et ambiance vénitienne",
+      },
+
+      {
+        key: "doge",
+        name: "Palais des Doges",
+        address: "Doge's Palace, Piazza San Marco, Venezia, Italy",
+        fallback: [45.4339, 12.3404],
+        day: ["sun"],
+        emoji: "🏛️",
+        note: "Option dimanche matin",
+      },
+    ];
+
+    // --- Carte ---
+    const map = L.map('map', { zoomControl: true }).setView([45.4342, 12.3364], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const layerAll = L.layerGroup().addTo(map);
+    const markers = new Map();
+    let routeLine = null;
+
+    function googleMapsLink(lat, lon, label){
+      const q = encodeURIComponent(label || (lat + ',' + lon));
+      return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}(${q})`;
+    }
+
+    function renderPoiList(){
+      const ul = document.getElementById('poiList');
+      ul.innerHTML = '';
+      POIS.forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'item';
+        li.innerHTML = `
+          <div class="badge"></div>
+          <div>
+            <p class="t">${p.emoji} ${p.name}</p>
+            <p class="d">${p.note}<br><span class="small">${p.address}</span></p>
+          </div>
+          <div class="actions"><button class="secondary" data-focus="${p.key}">Zoom</button></div>
+        `;
+        ul.appendChild(li);
+      });
+    }
+
+    async function geocode(address){
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!res.ok) throw new Error('Geocode failed');
+      const data = await res.json();
+      if(!data || !data[0]) throw new Error('No results');
+      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    }
+
+    function makeMarker(p, latlng){
+      const m = L.marker(latlng);
+      const g = googleMapsLink(latlng[0], latlng[1], p.name);
+      m.bindPopup(`
+        <div style="font-family:system-ui;min-width:220px">
+          <div style="font-weight:800;margin-bottom:4px">${p.emoji} ${p.name}</div>
+          <div style="font-size:12px;opacity:.9;margin-bottom:6px">${p.note}</div>
+          <div style="font-size:11px;opacity:.75;margin-bottom:10px">${p.address}</div>
+          <a href="${g}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
+        </div>
+      `);
+      m.addTo(layerAll);
+      markers.set(p.key, { marker: m, latlng });
+    }
+
+    async function init(){
+      renderPoiList();
+
+      // Geocode en série (plus gentil avec Nominatim)
+      for (const p of POIS){
+        try{
+          const latlng = await geocode(p.address);
+          makeMarker(p, latlng);
+        }catch(e){
+          makeMarker(p, p.fallback);
+        }
+      }
+
+      // Vue générale
+      fitToKeys(POIS.map(p=>p.key));
+
+      // Events
+      document.getElementById('btnAll').addEventListener('click', () => showDay('all'));
+      document.getElementById('btnFri').addEventListener('click', () => showDay('fri'));
+      document.getElementById('btnSat').addEventListener('click', () => showDay('sat'));
+      document.getElementById('btnSun').addEventListener('click', () => showDay('sun'));
+      document.getElementById('btnFood').addEventListener('click', () => showDay('food'));
+
+      document.getElementById('btnReturn').addEventListener('click', () => showDay('return'));
+
+      document.body.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-focus]');
+        if(!btn) return;
+        focusKey(btn.dataset.focus);
+      });
+    }
+
+    function clearRoute(){
+      if(routeLine){
+        routeLine.remove();
+        routeLine = null;
+      }
+    }
+
+    function drawRoute(keys){
+      clearRoute();
+      const pts = keys
+        .map(k => markers.get(k)?.latlng)
+        .filter(Boolean);
+      if(pts.length < 2) return;
+      routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
+    }
+
+    function fitToKeys(keys){
+      const pts = keys
+        .map(k => markers.get(k)?.latlng)
+        .filter(Boolean)
+        .map(ll => L.latLng(ll[0], ll[1]));
+      if(!pts.length) return;
+      const bounds = L.latLngBounds(pts);
+      map.fitBounds(bounds.pad(0.22));
+    }
+
+    function focusKey(key){
+      const rec = markers.get(key);
+      if(!rec) return;
+      map.setView(rec.latlng, 16);
+      rec.marker.openPopup();
+    }
+
+    function setMarkerVisibility(predicate){
+      layerAll.clearLayers();
+      markers.forEach((rec, key) => {
+        const p = POIS.find(x=>x.key===key);
+        if(!p) return;
+        if(predicate(p)) rec.marker.addTo(layerAll);
+      });
+    }
+
+    function showDay(day){
+      clearRoute();
+      if(day === 'all'){
+        setMarkerVisibility(()=>true);
+        fitToKeys(POIS.map(p=>p.key));
+        drawRoute(["airport","piazzale","hotel","stmarks","rialto","restaurant","hotel","piazzale","airport"]);
+        return;
+      }
+      if(day === 'fri'){
+        setMarkerVisibility(p=>p.day.includes('fri'));
+        fitToKeys(["airport","piazzale","hotel"]);
+        drawRoute(["airport","piazzale","hotel"]);
+        return;
+      }
+      if(day === 'sat'){
+        setMarkerVisibility(p=>p.day.includes('sat') || p.key==="hotel");
+        const seq = ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","restaurant","hotel"];
+        fitToKeys(seq);
+        drawRoute(seq);
+        return;
+      }
+      if(day === 'sun'){
+        setMarkerVisibility(p=>p.day.includes('sun') || p.key==="hotel");
+        const seq = ["hotel","doge","hotel"];
+        fitToKeys(seq);
+        drawRoute(seq);
+        return;
+      }
+      if(day === 'food'){
+        setMarkerVisibility(p=>['allarco','domori','alparadiso','cannaregiobar','restaurant'].includes(p.key));
+        const seq = ["allarco","domori","alparadiso","cannaregiobar","restaurant"];
+        fitToKeys(seq);
+        drawRoute(seq);
+        return;
+      }
+      if(day === 'return'){
+        setMarkerVisibility(p=>p.day.includes('return'));
+        const seq = ["hotel","piazzale","airport"];
+        fitToKeys(seq);
+        drawRoute(seq);
+        return;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
