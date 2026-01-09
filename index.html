@@ -5,147 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Venise Plan</title>
+  <meta name="theme-color" content="#000000">
+  <title>Venise Week-end</title>
   
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231c1c1e%22/><text y=%22.9em%22 font-size=%2290%22>🎭</text></svg>">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
     :root {
-      --bg: #121212;
-      --panel: #1e1e1e;
+      --bg: #000000;
+      --panel: #1c1c1e;
       --accent: #0A84FF;
+      --accent-bg: rgba(10, 132, 255, 0.15);
       --text: #ffffff;
-      --text-muted: #a0a0a0;
+      --text-muted: #98989d;
+      --border: rgba(255, 255, 255, 0.12);
     }
 
     body {
       margin: 0; padding: 0;
       background-color: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      overflow: hidden; /* Important pour app mobile */
-      height: 100vh;
-      width: 100vw;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      height: 100vh; width: 100vw;
+      -webkit-user-select: none; user-select: none; /* App feel */
     }
 
-    /* --- DIAGNOSTIC (Debug) --- */
-    #debug-log {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: rgba(255, 0, 0, 0.9); color: white;
-      font-size: 10px; padding: 2px; z-index: 9999;
-      display: none; white-space: pre-wrap;
-    }
-
-    /* --- LAYOUT ABSOLU (Plus robuste que Flexbox pour les maps) --- */
+    /* --- CARTE (45% de l'écran pour plus de visibilité) --- */
     #map-container {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 40%; /* 40% de l'écran */
-      background: #2c2c2c; /* Gris en attendant la map */
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 45%; 
+      background: #2c2c2c;
       z-index: 1;
     }
-    
-    #map { width: 100%; height: 100%; }
+    #map { width: 100%; height: 100%; background: #151515; }
 
+    /* Bouton Géoloc (Bas Droite) */
+    .locate-btn {
+      position: absolute; bottom: 20px; right: 20px;
+      width: 44px; height: 44px;
+      background: rgba(28, 28, 30, 0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+    .locate-btn:active { transform: scale(0.95); background: rgba(50,50,50,0.9); }
+
+    /* --- CONTENU (Sheet) --- */
     #content-container {
-      position: absolute;
-      top: 40%; left: 0; right: 0; bottom: 0;
+      position: absolute; top: 45%; left: 0; right: 0; bottom: 0;
       background: var(--bg);
       z-index: 2;
       display: flex; flex-direction: column;
-      border-top: 1px solid #333;
+      border-top: 1px solid var(--border);
+      border-top-left-radius: 20px; border-top-right-radius: 20px;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
     }
 
-    /* --- FILTRES (Scroll horizontal) --- */
+    /* Handle (Petite barre grise) */
+    .handle-bar {
+      width: 100%; height: 20px; display: flex; justify-content: center; align-items: center;
+      flex-shrink: 0;
+    }
+    .handle { width: 36px; height: 5px; background: #3a3a3c; border-radius: 10px; }
+
+    /* Filtres */
     .filters-bar {
       flex: 0 0 auto;
-      padding: 12px 16px;
-      background: rgba(30,30,30,0.95);
-      border-bottom: 1px solid #333;
-      overflow-x: auto;
-      white-space: nowrap;
+      padding: 0 16px 12px 16px;
+      overflow-x: auto; white-space: nowrap;
       -webkit-overflow-scrolling: touch;
     }
     .filters-bar::-webkit-scrollbar { display: none; }
 
     .chip {
       display: inline-block;
-      padding: 8px 16px;
-      margin-right: 8px;
-      background: #333;
+      padding: 8px 16px; margin-right: 8px;
+      background: var(--panel);
       border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-muted);
-      border: 1px solid transparent;
+      font-size: 14px; font-weight: 600; color: var(--text-muted);
+      border: 1px solid var(--border);
       transition: all 0.2s;
     }
     .chip.active {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 2px 8px rgba(10,132,255,0.4);
+      background: var(--accent); color: white; border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(10,132,255,0.3);
     }
 
-    /* --- LISTE SCROLLABLE --- */
+    /* Liste */
     .scroll-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
+      flex: 1; overflow-y: auto;
+      padding: 0 16px 40px 16px;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 40px;
     }
 
-    h1 { font-size: 22px; margin: 0 0 5px 0; }
+    h1 { font-size: 24px; margin: 4px 0; letter-spacing: -0.5px; }
     p.sub { color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0; }
 
-    .card {
-      background: var(--panel);
-      padding: 15px;
-      border-radius: 16px;
-      margin-bottom: 15px;
-      border: 1px solid #333;
+    /* Carte Info */
+    .info-card {
+      background: var(--panel); padding: 16px; border-radius: 16px;
+      margin-bottom: 24px; border: 1px solid var(--border);
     }
-
-    .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-    .row:last-child { margin: 0; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+    .info-row:last-child { margin: 0; }
     .lbl { color: var(--text-muted); }
     .val { font-weight: 600; text-align: right; }
 
-    .item {
-      display: flex; gap: 15px; margin-bottom: 20px;
-    }
+    /* Timeline Items */
+    .timeline-group { margin-bottom: 20px; }
+    .item { display: flex; gap: 14px; margin-bottom: 20px; position: relative; }
+    
     .dot-col {
       display: flex; flex-direction: column; align-items: center; min-width: 20px;
     }
-    .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); margin-top: 5px; }
-    .line { width: 2px; background: #333; flex: 1; margin-top: 5px; min-height: 20px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); margin-top: 6px; z-index: 2; box-shadow: 0 0 0 4px var(--bg); }
+    .line { width: 2px; background: #333; flex: 1; margin-top: -2px; min-height: 20px; }
     .item:last-child .line { display: none; }
 
-    .info { flex: 1; background: var(--panel); padding: 12px; border-radius: 12px; }
-    .time { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-    .title { font-size: 16px; font-weight: 700; margin: 4px 0; }
-    .desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
-    
-    button.zoom {
-      background: rgba(10,132,255,0.15); color: var(--accent);
-      border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    .card-content {
+      flex: 1; background: var(--panel); padding: 14px; border-radius: 16px;
+      border: 1px solid var(--border);
     }
+    .time-badge { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .item-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #fff; }
+    .item-desc { font-size: 14px; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px; }
 
-    /* Override Leaflet Popup */
-    .leaflet-popup-content-wrapper { background: #222; color: #fff; }
-    .leaflet-popup-tip { background: #222; }
+    /* Boutons actions */
+    .actions { display: flex; gap: 8px; }
+    .btn-action {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      text-align: center; cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-zoom { background: var(--accent-bg); color: var(--accent); border: none; }
+    .btn-map { background: rgba(255,255,255,0.1); color: white; border: none; }
+
+    /* Leaflet Overrides */
+    .leaflet-popup-content-wrapper { 
+      background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(10px);
+      color: white; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .leaflet-popup-tip { background: rgba(28, 28, 30, 0.95); }
+    .leaflet-container a { color: var(--accent); }
+    
+    /* Attribution (On la bouge pour pas gêner le bouton GPS) */
+    .leaflet-control-attribution { font-size: 9px !important; background: transparent !important; color: #555 !important; }
   </style>
 </head>
 <body>
 
-  <div id="debug-log"></div>
-
   <div id="map-container">
     <div id="map"></div>
-    <div onclick="locateUser()" style="position:absolute; top:15px; right:15px; width:40px; height:40px; background:rgba(0,0,0,0.7); border-radius:10px; z-index:999; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #555;">📍</div>
+    <div class="locate-btn" onclick="locateUser()">📍</div>
   </div>
 
   <div id="content-container">
+    <div class="handle-bar"><div class="handle"></div></div>
     
     <div class="filters-bar">
       <div class="chip active" onclick="setMode('all')" id="btn-all">Tout</div>
@@ -157,42 +184,36 @@
     </div>
 
     <div class="scroll-content">
-      <h1>Week-end à Venise</h1>
-      <p class="sub">Hôtel San Marco • Vol retour Dim. 20h00</p>
+      <h1>Week-end Venise</h1>
+      <p class="sub">Hôtel San Marco • Retour Dim. 20h00</p>
 
-      <div class="card">
-        <div class="row"><span class="lbl">🏨 Hôtel</span><span class="val">Calle Minelli 1887</span></div>
-        <div class="row"><span class="lbl">🍽️ Samedi</span><span class="val">Cannaregio 1268 (Résa OK)</span></div>
+      <div class="info-card">
+        <div class="info-row"><span class="lbl">🏨 Hôtel</span><span class="val">Calle Minelli 1887</span></div>
+        <div class="info-row"><span class="lbl">🍽️ Samedi</span><span class="val">Cannaregio 1268 (Résa OK)</span></div>
       </div>
 
-      <div id="timeline-app">
-        </div>
+      <div id="timeline-list"></div>
       
-      <div style="height: 50px;"></div>
+      <div style="height: 60px; text-align:center; color:#444; font-size:11px; margin-top:20px;">
+        Carte hors-ligne partielle • Liens Google Maps actifs
+      </div>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // --- GESTION ERREUR ---
-    window.onerror = function(msg, url, line) {
-      const d = document.getElementById('debug-log');
-      d.style.display = 'block';
-      d.innerText += "Erreur: " + msg + " (Ligne " + line + ")\n";
-    };
-
     // --- DONNÉES ---
     const POIS = [
-      { key: "airport", name: "Aéroport (VCE)", coords: [45.5053, 12.3519], day: "Ven/Dim", emoji: "✈️", desc: "Arrivée et départ" },
-      { key: "piazzale", name: "Piazzale Roma", coords: [45.4380, 12.3181], day: "Ven", emoji: "🚌", desc: "Terminus Bus" },
-      { key: "hotel", name: "Hôtel (Calle Minelli)", coords: [45.4339, 12.3320], day: "Tout", emoji: "🏨", desc: "Base San Marco" },
-      { key: "stmarks", name: "Basilique St-Marc", coords: [45.4342, 12.3378], day: "Sam", emoji: "🕍", desc: "Matin 09:00" },
-      { key: "campanile", name: "Campanile", coords: [45.4340, 12.3390], day: "Sam", emoji: "🔭", desc: "Vue panoramique" },
-      { key: "rialto", name: "Pont du Rialto", coords: [45.4380, 12.3358], day: "Sam", emoji: "🌉", desc: "Zone déjeuner" },
-      { key: "allarco", name: "All’Arco", coords: [45.4384, 12.3353], day: "Sam", emoji: "🥪", desc: "Cicchetti" },
-      { key: "domori", name: "Cantina Do Mori", coords: [45.4381, 12.3360], day: "Sam", emoji: "🍷", desc: "Vieux bacaro" },
-      { key: "restaurant", name: "Resto Cannaregio", coords: [45.4440, 12.3253], day: "Sam", emoji: "🍽️", desc: "Dîner Samedi" },
-      { key: "doge", name: "Palais des Doges", coords: [45.4339, 12.3404], day: "Dim", emoji: "🏛️", desc: "Matin" }
+      { key: "airport", name: "Aéroport (VCE)", coords: [45.5053, 12.3519], emoji: "✈️" },
+      { key: "piazzale", name: "Piazzale Roma", coords: [45.4380, 12.3181], emoji: "🚌" },
+      { key: "hotel", name: "Hôtel (Calle Minelli)", coords: [45.4339, 12.3320], emoji: "🏨" },
+      { key: "stmarks", name: "Basilique St-Marc", coords: [45.4342, 12.3378], emoji: "🕍" },
+      { key: "campanile", name: "Campanile", coords: [45.4340, 12.3390], emoji: "🔭" },
+      { key: "rialto", name: "Pont du Rialto", coords: [45.4380, 12.3358], emoji: "🌉" },
+      { key: "allarco", name: "All’Arco", coords: [45.4384, 12.3353], emoji: "🥪" },
+      { key: "domori", name: "Cantina Do Mori", coords: [45.4381, 12.3360], emoji: "🍷" },
+      { key: "restaurant", name: "Resto Cannaregio", coords: [45.4440, 12.3253], emoji: "🍽️" },
+      { key: "doge", name: "Palais des Doges", coords: [45.4339, 12.3404], emoji: "🏛️" }
     ];
 
     const TIMELINE = [
@@ -212,132 +233,117 @@
       return: ["hotel", "piazzale", "airport"]
     };
 
-    // --- VARIABLES GLOBALES ---
-    let map = null;
-    let markers = {};
-    let currentPolyline = null;
-
-    // --- INITIALISATION ---
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        initMap();
-        initTimeline();
-        setMode('all');
-      } catch (e) {
-        document.getElementById('debug-log').style.display='block';
-        document.getElementById('debug-log').innerText += "Init Error: " + e.message;
-      }
-    });
+    // --- MAP SETUP ---
+    let map, markers = {}, polyline;
 
     function initMap() {
-      // 1. Créer la map
-      map = L.map('map', { zoomControl: false }).setView([45.436, 12.335], 14);
+      map = L.map('map', { zoomControl: false, attributionControl: true }).setView([45.436, 12.335], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '' }).addTo(map);
+      setTimeout(() => map.invalidateSize(), 500); // Fix display bug
+    }
 
-      // 2. Ajouter les tuiles (OpenStreetMap Standard = très fiable)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OSM'
-      }).addTo(map);
-
-      // 3. Forcer le redimensionnement (fixe le bug de l'écran gris/noir)
-      setTimeout(() => { map.invalidateSize(); }, 500);
+    function getGmapsLink(coords) {
+      return `https://www.google.com/maps/search/?api=1&query=${coords[0]},${coords[1]}`;
     }
 
     function initTimeline() {
-      const container = document.getElementById('timeline-app');
-      let html = "";
-      TIMELINE.forEach(item => {
-        html += `
+      const el = document.getElementById('timeline-list');
+      el.innerHTML = TIMELINE.map(item => {
+        const poi = POIS.find(p => p.key === item.focus);
+        const mapLink = poi ? getGmapsLink(poi.coords) : "#";
+        
+        return `
           <div class="item">
             <div class="dot-col">
               <div class="dot" style="background:${item.color}"></div>
               <div class="line"></div>
             </div>
-            <div class="info">
-              <div class="time">${item.t}</div>
-              <div class="title">${item.title}</div>
-              <div class="desc">${item.txt}</div>
-              <button class="zoom" onclick="zoomTo('${item.focus}')">Voir sur la carte</button>
+            <div class="card-content">
+              <div class="time-badge">${item.t}</div>
+              <div class="item-title">${item.title}</div>
+              <div class="item-desc">${item.txt}</div>
+              <div class="actions">
+                <button class="btn-action btn-zoom" onclick="zoomTo('${item.focus}')">Voir sur plan</button>
+                <a href="${mapLink}" target="_blank" class="btn-action btn-map">📍 Go (GPS)</a>
+              </div>
             </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
+          </div>`;
+      }).join('');
     }
 
-    // --- FONCTIONS LOGIQUES ---
+    // --- LOGIC ---
     window.setMode = function(mode) {
-      // UI Update
+      // 1. UI Chips
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      const btn = document.getElementById('btn-' + mode);
-      if(btn) btn.classList.add('active');
+      document.getElementById('btn-' + mode).classList.add('active');
 
-      // Map Clean
+      // 2. Clear Map
       for (let k in markers) map.removeLayer(markers[k]);
+      if (polyline) map.removeLayer(polyline);
       markers = {};
-      if (currentPolyline) map.removeLayer(currentPolyline);
 
-      // Filter Data
+      // 3. Add Markers
       const keys = ROUTES[mode] || ROUTES.all;
       const points = [];
 
       keys.forEach((k, i) => {
         const p = POIS.find(x => x.key === k);
-        if (p) {
-          // Marker Icon
-          const icon = L.divIcon({
-            className: 'custom-pin',
-            html: `<div style="background:#0A84FF;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;font-weight:bold;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,0.5)">${i+1}</div>`,
-            iconSize: [24,24],
-            iconAnchor: [12,12]
-          });
+        if (!p) return;
 
-          // Create Marker
-          const m = L.marker(p.coords, { icon: icon }).addTo(map);
-          
-          // Popup
-          const popupContent = `<div style="text-align:center"><b>${p.emoji} ${p.name}</b><br><span style="font-size:11px;opacity:0.8">${p.desc}</span></div>`;
-          m.bindPopup(popupContent);
-          
-          markers[k] = m;
-          points.push(p.coords);
-        }
+        const icon = L.divIcon({
+          className: 'pin',
+          html: `<div style="background:#0A84FF;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;font-weight:700;font-size:12px;box-shadow:0 3px 6px rgba(0,0,0,0.3)">${i+1}</div>`,
+          iconSize: [24,24], iconAnchor: [12,12]
+        });
+
+        const m = L.marker(p.coords, { icon: icon }).addTo(map);
+        const link = getGmapsLink(p.coords);
+        
+        m.bindPopup(`
+          <div style="text-align:center; min-width:160px">
+            <div style="font-size:24px;margin-bottom:4px">${p.emoji}</div>
+            <div style="font-weight:700;font-size:15px;margin-bottom:6px">${p.name}</div>
+            <a href="${link}" target="_blank" style="display:inline-block;padding:6px 12px;background:#0A84FF;color:white;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600">Ouvrir dans Maps</a>
+          </div>
+        `);
+        
+        markers[k] = m;
+        points.push(p.coords);
       });
 
-      // Fit Bounds
-      if (points.length > 0) {
-        map.fitBounds(L.latLngBounds(points), { padding: [50, 50], maxZoom: 16 });
-      }
-
-      // Draw Line (si pertinent)
+      // 4. Fit & Line
+      if (points.length) map.fitBounds(L.latLngBounds(points), { padding: [50, 50], maxZoom: 16 });
       if (['fri', 'sat', 'return', 'food'].includes(mode) && points.length > 1) {
-        currentPolyline = L.polyline(points, { color: '#0A84FF', weight: 3, opacity: 0.7, dashArray: '5, 10' }).addTo(map);
+        polyline = L.polyline(points, { color: '#0A84FF', weight: 3, opacity: 0.6, dashArray: '6, 8' }).addTo(map);
       }
     };
 
     window.zoomTo = function(key) {
-      const p = POIS.find(x => x.key === key);
-      if (p) {
-        map.setView(p.coords, 16);
-        // On attend que le mouvement finisse pour ouvrir la popup
-        setTimeout(() => {
-          if(markers[key]) markers[key].openPopup();
-        }, 300);
-        // Scroll top mobile
+      if (markers[key]) {
+        map.setView(markers[key].getLatLng(), 16);
+        setTimeout(() => markers[key].openPopup(), 300);
+        // Petit scroll auto vers le haut
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Si on n'est pas dans le bon mode, on switch sur 'all' puis on zoom
+        setMode('all');
+        setTimeout(() => zoomTo(key), 100);
       }
     };
 
     window.locateUser = function() {
-      if (!navigator.geolocation) { alert("Pas de GPS"); return; }
+      if (!navigator.geolocation) return alert("Activez le GPS et vérifiez le HTTPS.");
       navigator.geolocation.getCurrentPosition(pos => {
         const ll = [pos.coords.latitude, pos.coords.longitude];
-        L.circleMarker(ll, { radius: 8, color: 'white', fillColor: '#0A84FF', fillOpacity: 1 }).addTo(map);
+        L.circleMarker(ll, { radius: 8, color: 'white', fillColor: '#30D158', fillOpacity: 1 }).addTo(map);
         map.setView(ll, 15);
-      }, err => {
-        alert("Erreur GPS : " + err.message + "\n(Vérifiez que vous êtes en HTTPS)");
-      }, { enableHighAccuracy: true });
+      }, () => alert("Position introuvable."), { enableHighAccuracy: true });
     };
+
+    // Start
+    initMap();
+    initTimeline();
+    setMode('all');
 
   </script>
 </body>
