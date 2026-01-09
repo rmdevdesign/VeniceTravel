@@ -409,7 +409,27 @@
         .map(k => markers.get(k)?.latlng)
         .filter(Boolean);
       if(pts.length < 2) return;
+
+      // Ligne principale
       routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
+
+      // Flèches directionnelles
+      for(let i = 0; i < pts.length - 1; i++){
+        const start = L.latLng(pts[i][0], pts[i][1]);
+        const end = L.latLng(pts[i+1][0], pts[i+1][1]);
+        const mid = L.latLng(
+          (start.lat + end.lat) / 2,
+          (start.lng + end.lng) / 2
+        );
+        const bearing = Math.atan2(end.lng - start.lng, end.lat - start.lat) * 180 / Math.PI;
+        const arrowIcon = L.divIcon({
+          className: 'arrow-icon',
+          html: `<div style="transform: rotate(${bearing}deg); font-size:18px; color:#7aa6ff;">➤</div>`,
+          iconSize: [18,18],
+          iconAnchor: [9,9]
+        });
+        L.marker(mid, { icon: arrowIcon, interactive: false }).addTo(map);
+      }
     }
 
     function fitToKeys(keys){
