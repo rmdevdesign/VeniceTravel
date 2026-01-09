@@ -316,22 +316,51 @@
       return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}(${q})`;
     }
 
-    function renderPoiList(){
+    function makeNumberIcon(n){
+      return L.divIcon({
+        className: 'num-icon',
+        html: `<div style="background:#7aa6ff;color:#0b1220;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 0 0 4px rgba(122,166,255,.25)">${n}</div>`,
+        iconSize: [28,28],
+        iconAnchor: [14,14]
+      });
+    }
+
+    function popupHtml(p, idx, latlng){
+      const g = googleMapsLink(latlng[0], latlng[1], p.name);
+      return `
+        <div style="font-family:system-ui;min-width:220px">
+          <div style="font-weight:800;margin-bottom:4px">${idx}. ${p.emoji} ${p.name}</div>
+          <div style="font-size:12px;opacity:.9;margin-bottom:6px">${p.note}</div>
+          <div style="font-size:11px;opacity:.75;margin-bottom:10px">${p.address}</div>
+          <a href="${g}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
+        </div>
+      `;
+    }
+
+    let currentListKeys = POIS.map(p=>p.key);
+
+function renderPoiList(keys){
       const ul = document.getElementById('poiList');
       ul.innerHTML = '';
-      POIS.forEach(p => {
+      const ordered = (keys && keys.length) ? keys : POIS.map(p=>p.key);
+      currentListKeys = ordered.slice();
+
+      ordered.forEach((k, i) => {
+        const p = POIS.find(x=>x.key===k);
+        if(!p) return;
         const li = document.createElement('li');
         li.className = 'item';
         li.innerHTML = `
           <div class="badge"></div>
           <div>
-            <p class="t">${p.emoji} ${p.name}</p>
+            <p class="t">${i+1}. ${p.emoji} ${p.name}</p>
             <p class="d">${p.note}<br><span class="small">${p.address}</span></p>
           </div>
           <div class="actions"><button class="secondary" data-focus="${p.key}">Zoom</button></div>
         `;
         ul.appendChild(li);
       });
+    });
     }
 
     async function geocode(address){
@@ -344,25 +373,11 @@
     }
 
     function makeMarker(p, latlng){
-      const index = POIS.findIndex(x => x.key === p.key) + 1;
-      const icon = L.divIcon({
-        className: 'num-icon',
-        html: `<div style="background:#7aa6ff;color:#0b1220;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 0 4px rgba(122,166,255,.25)">${index}</div>`,
-        iconSize: [28,28],
-        iconAnchor: [14,14]
-      });
-      const m = L.marker(latlng, { icon });
-      const g = googleMapsLink(latlng[0], latlng[1], p.name);
-      m.bindPopup(`
-        <div style="font-family:system-ui;min-width:220px">
-          <div style="font-weight:800;margin-bottom:4px">${index}. ${p.emoji} ${p.name}</div>
-          <div style="font-size:12px;opacity:.9;margin-bottom:6px">${p.note}</div>
-          <div style="font-size:11px;opacity:.75;margin-bottom:10px">${p.address}</div>
-          <a href="${g}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
-        </div>
-      `);
+      // Numéro par défaut (sera renuméroté selon le filtre actif)
+      const m = L.marker(latlng, { icon: makeNumberIcon(1) });
+      m.bindPopup(popupHtml(p, 1, latlng));
       m.addTo(layerAll);
-      markers.set(p.key, { marker: m, latlng });
+      markers.set(p.key, { marker: m, latlng, poi: p, currentIndex: 1 });
     }
 
     let meMarker = null;
@@ -401,7 +416,7 @@ function locateMe(silent=false){
 }
 
 async function init(){
-      renderPoiList();
+      renderPoiList(POIS.map(p=>p.key));
 
       // Geocode en série (plus gentil avec Nominatim)
       for (const p of POIS){
@@ -442,9 +457,6 @@ async function init(){
         routeLine.remove();
         routeLine = null;
       }
-      if(window.arrowLayer){
-        window.arrowLayer.clearLayers();
-      }
     }
 
     function drawRoute(keys){
@@ -453,33 +465,7 @@ async function init(){
         .map(k => markers.get(k)?.latlng)
         .filter(Boolean);
       if(pts.length < 2) return;
-
-      // Ligne principale
       routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
-
-      // Flèches directionnelles (dans un layer dédié)
-      if(!window.arrowLayer){
-        window.arrowLayer = L.layerGroup().addTo(map);
-      }
-
-      for(let i = 0; i < pts.length - 1; i++){
-        const start = L.latLng(pts[i][0], pts[i][1]);
-        const end = L.latLng(pts[i+1][0], pts[i+1][1]);
-        const mid = L.latLng((start.lat + end.lat)/2, (start.lng + end.lng)/2);
-
-        // Bearing: 0° = nord. On ajuste pour tourner une flèche "➤" (qui pointe à droite).
-        const angleRad = Math.atan2(end.lat - start.lat, end.lng - start.lng);
-        const angleDeg = angleRad * 180 / Math.PI;
-
-        const arrowIcon = L.divIcon({
-          className: 'arrow-icon',
-          html: `<div style="transform: rotate(${angleDeg}deg); font-size:18px; color:#7aa6ff; text-shadow: 0 2px 10px rgba(0,0,0,.45);">➤</div>`,
-          iconSize: [18,18],
-          iconAnchor: [9,9]
-        });
-
-        L.marker(mid, { icon: arrowIcon, interactive: false }).addTo(window.arrowLayer);
-      }
     }
 
     function fitToKeys(keys){
@@ -501,53 +487,82 @@ async function init(){
 
     function setMarkerVisibility(predicate){
       layerAll.clearLayers();
+      const visibleKeys = [];
       markers.forEach((rec, key) => {
-        const p = POIS.find(x=>x.key===key);
+        const p = rec.poi || POIS.find(x=>x.key===key);
         if(!p) return;
-        if(predicate(p)) rec.marker.addTo(layerAll);
+        if(predicate(p)){
+          rec.marker.addTo(layerAll);
+          visibleKeys.push(key);
+        }
       });
+      return visibleKeys;
+    });
+    }
+
+    function renumber(keysInOrder){
+      // Renumérote seulement les points visibles, dans l’ordre fourni.
+      keysInOrder.forEach((key, i) => {
+        const rec = markers.get(key);
+        if(!rec) return;
+        const idx = i + 1;
+        rec.currentIndex = idx;
+        rec.marker.setIcon(makeNumberIcon(idx));
+        rec.marker.setPopupContent(popupHtml(rec.poi, idx, rec.latlng));
+      });
+      // Met aussi la liste à gauche dans le même ordre/numérotation
+      renderPoiList(keysInOrder);
+    });
     }
 
     function showDay(day){
       clearRoute();
       if(day === 'all'){
+        const keys = POIS.map(p=>p.key);
         setMarkerVisibility(()=>true);
-        fitToKeys(POIS.map(p=>p.key));
-        drawRoute(["airport","piazzale","hotel","stmarks","rialto","restaurant","hotel","piazzale","airport"]);
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(["airport","piazzale","hotel","stmarks","rialto","allarco","domori","acquaalta","miracoli","restaurant","piazzale","airport"]);
         return;
       }
       if(day === 'fri'){
+        const keys = ["airport","piazzale","hotel"];
         setMarkerVisibility(p=>p.day.includes('fri'));
-        fitToKeys(["airport","piazzale","hotel"]);
-        drawRoute(["airport","piazzale","hotel"]);
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(keys);
         return;
       }
       if(day === 'sat'){
+        const keys = ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","restaurant"];
         setMarkerVisibility(p=>p.day.includes('sat') || p.key==="hotel");
-        const seq = ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","restaurant","hotel"];
-        fitToKeys(seq);
-        drawRoute(seq);
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(keys);
         return;
       }
       if(day === 'sun'){
+        const keys = ["hotel","doge"];
         setMarkerVisibility(p=>p.day.includes('sun') || p.key==="hotel");
-        const seq = ["hotel","doge","hotel"];
-        fitToKeys(seq);
-        drawRoute(seq);
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(["hotel","doge","hotel"]);
         return;
       }
       if(day === 'food'){
-        setMarkerVisibility(p=>['allarco','domori','alparadiso','cannaregiobar','restaurant'].includes(p.key));
-        const seq = ["allarco","domori","alparadiso","cannaregiobar","restaurant"];
-        fitToKeys(seq);
-        drawRoute(seq);
+        const keys = ["allarco","domori","alparadiso","cannaregiobar","restaurant"];
+        setMarkerVisibility(p=>keys.includes(p.key));
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(keys);
         return;
       }
       if(day === 'return'){
+        const keys = ["hotel","piazzale","airport"];
         setMarkerVisibility(p=>p.day.includes('return'));
-        const seq = ["hotel","piazzale","airport"];
-        fitToKeys(seq);
-        drawRoute(seq);
+        renumber(keys);
+        fitToKeys(keys);
+        drawRoute(keys);
         return;
       }
     }
