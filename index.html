@@ -343,11 +343,18 @@
     }
 
     function makeMarker(p, latlng){
-      const m = L.marker(latlng);
+      const index = POIS.findIndex(x => x.key === p.key) + 1;
+      const icon = L.divIcon({
+        className: 'num-icon',
+        html: `<div style="background:#7aa6ff;color:#0b1220;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 0 4px rgba(122,166,255,.25)">${index}</div>`,
+        iconSize: [28,28],
+        iconAnchor: [14,14]
+      });
+      const m = L.marker(latlng, { icon });
       const g = googleMapsLink(latlng[0], latlng[1], p.name);
       m.bindPopup(`
         <div style="font-family:system-ui;min-width:220px">
-          <div style="font-weight:800;margin-bottom:4px">${p.emoji} ${p.name}</div>
+          <div style="font-weight:800;margin-bottom:4px">${index}. ${p.emoji} ${p.name}</div>
           <div style="font-size:12px;opacity:.9;margin-bottom:6px">${p.note}</div>
           <div style="font-size:11px;opacity:.75;margin-bottom:10px">${p.address}</div>
           <a href="${g}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
