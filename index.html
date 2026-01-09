@@ -2,362 +2,383 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Week‑end à Venise — Plan + carte interactive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Venise</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
   <style>
-    :root{--bg:#0b1220;--panel:#0f1a30;--card:#121f3a;--text:#e8eefc;--muted:#a9b7da;--accent:#7aa6ff;--ok:#66e3b4;--warn:#ffd37a;--bad:#ff7a7a;}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:linear-gradient(180deg,var(--bg),#070b14);color:var(--text);}
-    header{padding:18px 18px 0;}
-    .title{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
-    .title h1{margin:0;font-size:22px;letter-spacing:.2px}
-    .title .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted);font-size:12px}
-    .layout{display:grid;grid-template-columns:420px 1fr;gap:14px;padding:14px 14px 18px;min-height:calc(100vh - 72px)}
-    @media (max-width: 980px){.layout{grid-template-columns:1fr;}.map{order:-1;min-height:55vh}}
-    .panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    .sidebar{padding:14px}
-    .card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px;margin:10px 0}
-    .card h2{margin:0 0 8px;font-size:14px;color:#dfe8ff;letter-spacing:.2px}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px}
-    .meta b{color:var(--text);font-weight:600}
-    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    button{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(122,166,255,.12);color:var(--text);padding:9px 10px;border-radius:12px;font-weight:600;font-size:12px}
-    button.secondary{background:rgba(255,255,255,.06)}
-    button:active{transform:translateY(1px)}
-    .list{margin:8px 0 0;padding:0;list-style:none}
-    .item{display:flex;gap:10px;align-items:flex-start;padding:10px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12);margin:8px 0}
-    .badge{min-width:10px;height:10px;border-radius:999px;margin-top:6px;background:var(--accent);box-shadow:0 0 0 4px rgba(122,166,255,.14)}
-    .item .t{font-weight:650;font-size:13px;margin:0}
-    .item .d{margin:2px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
-    .item .actions{margin-left:auto;display:flex;gap:8px}
-    .link{color:var(--accent);text-decoration:none}
-    .small{font-size:11px;color:var(--muted)}
-    .divider{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-    #map{height:100%;min-height:520px}
-    .map{padding:0}
-    .note{padding:10px 12px;border-radius:14px;border:1px dashed rgba(255,255,255,.16);background:rgba(102,227,180,.08);color:#cfeee3;font-size:12px}
-    .warn{background:rgba(255,211,122,.09);border-style:solid;border-color:rgba(255,211,122,.22);color:#fff0d2}
-    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    .kpi .box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:10px}
-    .kpi .box .n{font-size:18px;font-weight:800}
-    .kpi .box .l{font-size:11px;color:var(--muted)}
-    .foot{padding:12px 14px;color:var(--muted);font-size:12px}
-    .chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);margin:6px 6px 0 0}
-    .chip span{color:var(--muted)}
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #ffffff;
+      --subtext: #8e8e93;
+      --accent: #0a84ff;
+      --accent-dim: rgba(10, 132, 255, 0.15);
+      --success: #30d158;
+      --warn: #ffd60a;
+      --danger: #ff453a;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh; /* Fallback */
+      height: 100dvh; /* Dynamic viewport height */
+      overflow: hidden;
+    }
+
+    /* --- MAP SECTION (Top 40%) --- */
+    #map-container {
+      flex: 0 0 40%;
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--card-border);
+    }
+    #map { width: 100%; height: 100%; background: #242f3e; }
+    
+    /* Bouton Localisation flottant sur la carte */
+    .locate-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 999;
+      background: rgba(28, 28, 30, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      color: var(--accent);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* --- CONTENT SECTION (Bottom 60%) --- */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg);
+      padding-bottom: 40px; /* Safe area */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sticky Filter Bar */
+    .filters-container {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 0;
+    }
+
+    .scroll-chips {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 0 16px;
+      scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+    .scroll-chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--subtext);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip.active, .chip:active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Main Content */
+    .section { padding: 16px 16px 0; }
+    
+    h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.5px; }
+    .subtitle { color: var(--subtext); font-size: 13px; margin-bottom: 16px; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { margin: 0; padding: 0; border: 0; }
+    .info-label { font-size: 14px; color: var(--subtext); }
+    .info-val { font-size: 14px; font-weight: 600; text-align: right; }
+    .highlight { color: var(--accent); }
+    
+    /* Checklist */
+    .check-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .check-icon { color: var(--success); font-size: 18px; }
+    .check-text { font-size: 14px; line-height: 1.4; }
+    .check-sub { font-size: 12px; color: var(--subtext); display: block; margin-top: 2px;}
+
+    /* List Items (Timeline) */
+    .timeline-item {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .timeline-line {
+      position: absolute;
+      left: 7px;
+      top: 24px;
+      bottom: -20px;
+      width: 2px;
+      background: var(--card-border);
+      z-index: 0;
+    }
+    .timeline-item:last-child .timeline-line { display: none; }
+    
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      z-index: 1;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .content-box {
+      flex: 1;
+      background: var(--card);
+      padding: 12px 14px;
+      border-radius: 12px;
+      position: relative;
+    }
+    .time-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--subtext);
+      margin-bottom: 4px;
+    }
+    .item-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .item-desc { font-size: 13px; color: var(--subtext); line-height: 1.4; margin-bottom: 8px; }
+    
+    .zoom-btn {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      background: var(--accent-dim);
+      padding: 6px 12px;
+      border-radius: 99px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Links Grid */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    .link-tile {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .link-tile span { font-size: 18px; }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper { 
+      background: rgba(28, 28, 30, 0.95) !important; 
+      backdrop-filter: blur(10px);
+      color: white !important; 
+      border-radius: 12px !important;
+    }
+    .leaflet-popup-tip { background: rgba(28, 28, 30, 0.95) !important; }
+    .leaflet-container a { color: var(--accent) !important; }
+
   </style>
 </head>
 <body>
-  <header>
-    <div class="title">
-      <h1>Week‑end à Venise — votre plan + carte interactive</h1>
-      <div class="pill">✈️ Vol retour : <b>dimanche 20:00</b> • Départ hôtel conseillé : <b>~17:00</b> (arrivée aéroport ~18:00)</div>
-      <div class="pill">🏨 Hôtel : Calle Minelli, San Marco 1887/1888</div>
-      <div class="pill">🍽️ Samedi soir : Cannaregio, 1268</div>
+
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="locate-btn" id="btnLocate">📍</div>
+  </div>
+
+  <div id="content">
+    
+    <div class="filters-container">
+      <div class="scroll-chips">
+        <button class="chip active" id="btnAll">Tout</button>
+        <button class="chip" id="btnFri">Ven.</button>
+        <button class="chip" id="btnSat">Sam.</button>
+        <button class="chip" id="btnSun">Dim.</button>
+        <button class="chip" id="btnFood">Food</button>
+        <button class="chip" id="btnReturn">Retour</button>
+      </div>
     </div>
-  </header>
 
-  <div class="layout">
-    <section class="panel sidebar">
+    <div class="section">
+      <h1>Week‑end à Venise</h1>
+      <div class="subtitle">Dimanche vol retour 20:00 • Début ~17:00</div>
+
       <div class="card">
-        <h2>Réservations (checklist)</h2>
-        <div class="note warn">Basilique Saint‑Marc : si aucun créneau dispo, entrée possible <b>sans réservation</b> → venez tôt pour limiter la file.</div>
-        <div class="kpi">
-          <div class="box"><div class="n">✅</div><div class="l">Dîner samedi soir : à réserver</div></div>
-          <div class="box"><div class="n">✅</div><div class="l">Palais des Doges : à réserver si vous le faites</div></div>
+        <div class="info-row">
+          <span class="info-label">🏨 Hôtel</span>
+          <span class="info-val">Calle Minelli<br><span style="font-size:12px;color:var(--subtext)">San Marco 1887</span></span>
         </div>
-        <div class="divider"></div>
-        <div class="small">Liens (officiels / utiles)</div>
-        <div style="margin-top:8px">
-          <span class="chip">🕍 <a class="link" href="https://www.basilicasanmarco.it/" target="_blank" rel="noopener">Basilique</a> <span>(site officiel)</span></span>
-          <span class="chip">🏛️ <a class="link" href="https://palazzoducale.visitmuve.it/" target="_blank" rel="noopener">Palais des Doges</a> <span>(MUVE)</span></span>
-          <span class="chip">🚌 <a class="link" href="https://www.atvo.it/" target="_blank" rel="noopener">Bus ATVO</a></span>
-          <span class="chip">🚍 <a class="link" href="https://actv.avmspa.it/" target="_blank" rel="noopener">ACTV</a></span>
-          <span class="chip">⛴️ <a class="link" href="https://www.alilaguna.it/" target="_blank" rel="noopener">Alilaguna</a></span>
+        <div class="info-row">
+          <span class="info-label">🍽️ Samedi soir</span>
+          <span class="info-val">Cannaregio, 1268<br><span style="font-size:12px;color:var(--success)">Réservé ✅</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">⚠️ Astuce</span>
+          <span class="info-val" style="font-weight:400; font-size:13px">Basilique : sans résa,<br>venir tôt (09h00).</span>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Itinéraires carte (1 clic)</h2>
-        <div class="btnrow">
-          <button id="btnAll">Tout afficher</button>
-          <button class="secondary" id="btnFri">Vendredi</button>
-          <button class="secondary" id="btnSat">Samedi</button>
-          <button class="secondary" id="btnSun">Dimanche</button>
-          <button class="secondary" id="btnFood">Cicchetti & Bacari</button>
-          <button class="secondary" id="btnReturn">Retour aéroport</button>
-          <button class="secondary" id="btnLocate">📍 Moi</button>
-        </div>
-        <div class="divider"></div>
-        <div class="small">Astuce : cliquez un point sur la carte → lien Google Maps. Pour vous localiser sur iPhone (web app), appuyez sur <b>📍 Moi</b> et assurez-vous d’ouvrir la page en <b>HTTPS</b> (sinon iOS bloque souvent la géoloc).</div>
-      </div>
-
-      <div class="card">
-        <h2>Votre plan (récap propre)</h2>
-
-        <div class="item">
-          <div class="badge" style="background:#7aa6ff"></div>
-          <div>
-            <p class="t">Vendredi soir (arrivée ~21:00)</p>
-            <p class="d">Aéroport → Piazzale Roma (bus) → hôtel (vaporetto / marche). Dîner léger proche de l’hôtel si faim. Dodo tôt.</p>
+      <h2 style="font-size:17px; margin:10px 0 15px;">Programme</h2>
+      
+      <div id="timeline-container">
+        <div class="timeline-item">
+          <div class="dot" style="background: #0a84ff; box-shadow: 0 0 10px rgba(10,132,255,0.4)"></div>
+          <div class="timeline-line"></div>
+          <div class="content-box">
+            <div class="time-badge">Vendredi Soir</div>
+            <div class="item-title">Arrivée & Transfert</div>
+            <div class="item-desc">Aéroport → Piazzale Roma (Bus) → Hôtel. Dîner léger et repos.</div>
+            <button class="zoom-btn" data-focus="hotel">Voir Hôtel</button>
           </div>
-          <div class="actions"><button class="secondary" data-focus="hotel">Voir hôtel</button></div>
         </div>
 
-        <div class="item">
-          <div class="badge" style="background:#66e3b4"></div>
-          <div>
-            <p class="t">Samedi matin</p>
-            <p class="d">08:15 Place Saint‑Marc → 09:00 file basilique (sans résa) → visite → Campanile si ciel clair.</p>
-            <p class="d"><b>Objectif</b> : être au Rialto vers 12:00–12:30.</p>
+        <div class="timeline-item">
+          <div class="dot" style="background: #30d158;"></div>
+          <div class="timeline-line"></div>
+          <div class="content-box">
+            <div class="time-badge">Samedi Matin</div>
+            <div class="item-title">Saint-Marc & Rialto</div>
+            <div class="item-desc">Basilique (tôt) → Campanile → Balade vers Rialto pour 12h.</div>
+            <button class="zoom-btn" data-focus="stmarks">Voir St-Marc</button>
           </div>
-          <div class="actions"><button class="secondary" data-focus="stmarks">Zoom St‑Marc</button></div>
         </div>
 
-        <div class="item">
-          <div class="badge" style="background:#ffd37a"></div>
-          <div>
-            <p class="t">Samedi midi / après‑midi</p>
-            <p class="d">Cicchetti autour du Rialto (pas de résa) → Cannaregio / Castello → Libreria Acqua Alta → Santa Maria dei Miracoli (si ouverte).</p>
+        <div class="timeline-item">
+          <div class="dot" style="background: #ffd60a;"></div>
+          <div class="timeline-line"></div>
+          <div class="content-box">
+            <div class="time-badge">Samedi Midi</div>
+            <div class="item-title">Cicchetti & Découverte</div>
+            <div class="item-desc">Déjeuner sur le pouce (Rialto) → Cannaregio → Librairie Acqua Alta.</div>
+            <button class="zoom-btn" data-focus="rialto">Zone Rialto</button>
           </div>
-          <div class="actions"><button class="secondary" data-focus="rialto">Zoom Rialto</button></div>
         </div>
 
-        <div class="item">
-          <div class="badge" style="background:#ff7ad9"></div>
-          <div>
-            <p class="t">Samedi soir</p>
-            <p class="d">Apéro bacaro à Cannaregio → <b>restaurant (Cannaregio 1268)</b> → balade de nuit.</p>
+        <div class="timeline-item">
+          <div class="dot" style="background: #bf5af2;"></div>
+          <div class="timeline-line"></div>
+          <div class="content-box">
+            <div class="time-badge">Samedi Soir</div>
+            <div class="item-title">Apéro & Dîner</div>
+            <div class="item-desc">Spritz au bord de l'eau (Misericordia) → Resto Cannaregio.</div>
+            <button class="zoom-btn" data-focus="restaurant">Voir Resto</button>
           </div>
-          <div class="actions"><button class="secondary" data-focus="restaurant">Zoom resto</button></div>
         </div>
 
-        <div class="item">
-          <div class="badge" style="background:#9b7aff"></div>
-          <div>
-            <p class="t">Dimanche matin</p>
-            <p class="d">Option A : Palais des Doges + Pont des Soupirs. Option B : vaporetto ligne 1 sur le Grand Canal + balade Dorsoduro.</p>
+        <div class="timeline-item">
+          <div class="dot" style="background: #ff453a;"></div>
+          <div class="timeline-line"></div>
+          <div class="content-box">
+            <div class="time-badge">Dimanche & Retour</div>
+            <div class="item-title">Doges & Aéroport</div>
+            <div class="item-desc">Matin : Palais des Doges ou Vaporetto. <b>17h00</b> : Départ vers l'aéroport.</div>
+            <button class="zoom-btn" data-focus="airport">Voir Aéroport</button>
           </div>
-          <div class="actions"><button class="secondary" data-focus="doge">Zoom Doges</button></div>
-        </div>
-
-        <div class="item">
-          <div class="badge" style="background:#ff7a7a"></div>
-          <div>
-            <p class="t">Dimanche retour (vol 20:00)</p>
-            <p class="d">Récup bagages → viser <b>départ hôtel ~17:00</b> → aéroport <b>~18:00</b>. Trajet conseillé : vaporetto vers Piazzale Roma → bus ATVO/ACTV → VCE.</p>
-          </div>
-          <div class="actions"><button class="secondary" data-focus="airport">Zoom aéroport</button></div>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Points ajoutés sur la carte</h2>
-        <ul class="list" id="poiList"></ul>
+      <h2 style="font-size:17px; margin:20px 0 15px;">Liens Utiles</h2>
+      <div class="links-grid" style="margin-bottom: 40px;">
+        <a href="https://www.basilicasanmarco.it/" target="_blank" class="link-tile"><span>🕍</span>Basilique</a>
+        <a href="https://palazzoducale.visitmuve.it/" target="_blank" class="link-tile"><span>🏛️</span>Doges</a>
+        <a href="https://www.atvo.it/" target="_blank" class="link-tile"><span>🚌</span>Bus ATVO</a>
+        <a href="https://actv.avmspa.it/" target="_blank" class="link-tile"><span>🚍</span>Vaporetto</a>
+        <a href="https://www.alilaguna.it/" target="_blank" class="link-tile"><span>⛴️</span>Alilaguna</a>
       </div>
 
-      <div class="foot">Fonctionne hors compte : carte OpenStreetMap + Leaflet. Le géocodage utilise Nominatim (peut prendre 1–3 secondes au chargement).</div>
-    </section>
-
-    <section class="panel map">
-      <div id="map"></div>
-    </section>
+      <ul id="poiList" style="display:none"></ul>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-    // --- Données du week-end ---
-    // Géocodage côté navigateur (Nominatim) pour avoir des points exacts.
-    // Fallback approx. si Nominatim est indispo.
-
+    // --- Configuration des Points ---
     const POIS = [
-      { key: "airport", name: "Aéroport Marco Polo (VCE)", address: "Venice Marco Polo Airport, Tessera, Venezia, Italy", fallback: [45.5053, 12.3519], day: ["fri","return"], emoji: "✈️", note: "Arrivée vendredi / retour dimanche" },
-      { key: "piazzale", name: "Piazzale Roma", address: "Piazzale Roma, Venezia, Italy", fallback: [45.4380, 12.3181], day: ["fri","return"], emoji: "🚌", note: "Hub bus (ATVO/ACTV) + départ vaporetti" },
-      { key: "hotel", name: "Hôtel — Calle Minelli (San Marco)", address: "Calle Minelli 1887/1888, 30124 Venezia VE, Italy", fallback: [45.4339, 12.3320], day: ["fri","sat","sun","return"], emoji: "🏨", note: "Votre base — San Marco" },
-      { key: "stmarks", name: "Place & Basilique Saint-Marc", address: "Basilica di San Marco, Piazza San Marco, Venezia, Italy", fallback: [45.4342, 12.3378], day: ["sat"], emoji: "🕍", note: "Arriver tôt (sans résa = file)" },
-      { key: "campanile", name: "Campanile de Saint-Marc", address: "Campanile di San Marco, Venezia, Italy", fallback: [45.4340, 12.3390], day: ["sat"], emoji: "🔭", note: "Vue panoramique (si beau temps)" },
-      { key: "rialto", name: "Pont du Rialto", address: "Rialto Bridge, Venezia, Italy", fallback: [45.4380, 12.3358], day: ["sat"], emoji: "🌉", note: "Zone cicchetti + balade Grand Canal" },
-      { key: "allarco", name: "All’Arco (cicchetti)", address: "Osteria All'Arco, Venezia, Italy", fallback: [45.4384, 12.3353], day: ["sat"], emoji: "🥪", note: "Cicchetti culte (souvent jusqu’à ~15h)" },
-      { key: "domori", name: "Cantina Do Mori (cicchetti)", address: "Cantina Do Mori, Venezia, Italy", fallback: [45.4381, 12.3360], day: ["sat"], emoji: "🍷", note: "Cicchetti près du Rialto" },
-      { key: "acquaalta", name: "Libreria Acqua Alta", address: "Libreria Acqua Alta, Venezia, Italy", fallback: [45.4370, 12.3433], day: ["sat"], emoji: "📚", note: "Incontournable (souvent bondé l’après-midi)" },
-      { key: "miracoli", name: "Santa Maria dei Miracoli", address: "Chiesa di Santa Maria dei Miracoli, Venezia, Italy", fallback: [45.4400, 12.3362], day: ["sat"], emoji: "⛪", note: "Horaires parfois variables" },
-      { key: "restaurant", name: "Restaurant samedi soir (Cannaregio 1268)", address: "Cannaregio, 1268, 30121 Venezia VE, Italy", fallback: [45.4440, 12.3253], day: ["sat"], emoji: "🍽️", note: "Réservation conseillée" },
-      { key: "alparadiso", name: "Al Timon / Vino Vero (bacari)", address: "Fondamenta della Misericordia, Venezia, Italy", fallback: [45.4473, 12.3269], day: ["sat"], emoji: "🍹", note: "Apéro très local au bord de l’eau" },
-      { key: "cannaregiobar", name: "Bacaro (Fond. Misericordia)", address: "Fondamenta della Misericordia, Venezia, Italy", fallback: [45.4470, 12.3274], day: ["sat"], emoji: "🍷", note: "Spritz et ambiance vénitienne" },
-      { key: "doge", name: "Palais des Doges", address: "Doge's Palace, Piazza San Marco, Venezia, Italy", fallback: [45.4339, 12.3404], day: ["sun"], emoji: "🏛️", note: "Option dimanche matin" },
+      { key: "airport", name: "Aéroport (VCE)", address: "Venice Marco Polo", fallback: [45.5053, 12.3519], emoji: "✈️", note: "Vol retour 20:00" },
+      { key: "piazzale", name: "Piazzale Roma", address: "Piazzale Roma, Venezia", fallback: [45.4380, 12.3181], emoji: "🚌", note: "Départ Bus & Vaporetto" },
+      { key: "hotel", name: "Hôtel (Calle Minelli)", address: "Calle Minelli 1887, Venezia", fallback: [45.4339, 12.3320], emoji: "🏨", note: "San Marco" },
+      { key: "stmarks", name: "Basilique St-Marc", address: "Piazza San Marco", fallback: [45.4342, 12.3378], emoji: "🕍", note: "Venir vers 09h00" },
+      { key: "campanile", name: "Campanile", address: "Campanile di San Marco", fallback: [45.4340, 12.3390], emoji: "🔭", note: "Vue panoramique" },
+      { key: "rialto", name: "Pont du Rialto", address: "Rialto Bridge", fallback: [45.4380, 12.3358], emoji: "🌉", note: "Coeur de ville" },
+      { key: "allarco", name: "All’Arco", address: "Osteria All'Arco", fallback: [45.4384, 12.3353], emoji: "🥪", note: "Meilleurs cicchetti" },
+      { key: "domori", name: "Cantina Do Mori", address: "Cantina Do Mori", fallback: [45.4381, 12.3360], emoji: "🍷", note: "Historique" },
+      { key: "acquaalta", name: "Libreria Acqua Alta", address: "Libreria Acqua Alta", fallback: [45.4370, 12.3433], emoji: "📚", note: "Livres & Gondole" },
+      { key: "miracoli", name: "Santa Maria dei Miracoli", address: "Chiesa di Santa Maria dei Miracoli", fallback: [45.4400, 12.3362], emoji: "⛪", note: "Marbre magnifique" },
+      { key: "restaurant", name: "Resto (Cannaregio 1268)", address: "Cannaregio 1268", fallback: [45.4440, 12.3253], emoji: "🍽️", note: "Dîner Samedi" },
+      { key: "alparadiso", name: "Al Timon / Vino Vero", address: "Fondamenta della Misericordia", fallback: [45.4473, 12.3269], emoji: "🍹", note: "Apéro local" },
+      { key: "cannaregiobar", name: "Bacaro Misericordia", address: "Fondamenta della Misericordia", fallback: [45.4470, 12.3274], emoji: "🍷", note: "Ambiance" },
+      { key: "doge", name: "Palais des Doges", address: "Doge's Palace", fallback: [45.4339, 12.3404], emoji: "🏛️", note: "Musée incontournable" },
     ];
 
-    // --- Debug minimal : afficher une alerte si erreur JS (utile sur mobile) ---
-    window.addEventListener('error', (e) => {
-      const msg = (e?.error?.message || e.message || 'Erreur inconnue');
-      console.error(e.error || e);
-      // évite de spammer
-      if(!window.__errShown){
-        window.__errShown = true;
-        alert('Erreur sur la page : ' + msg + '\n(Je peux corriger si tu me dis ce message)');
-      }
-    });
-
-    // --- Carte ---
-    const map = L.map('map', { zoomControl: true }).setView([45.4342, 12.3364], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    const layerAll = L.layerGroup().addTo(map);
-    const markers = new Map(); // key -> { marker, latlng, poi }
-    let routeLine = null;
-
-    // --- Helpers ---
-    function googleMapsLink(lat, lon, label){
-      const q = encodeURIComponent(label || (lat + ',' + lon));
-      return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}(${q})`;
-    }
-
-    function makeNumberIcon(n){
-      return L.divIcon({
-        className: 'num-icon',
-        html: `<div style="background:#7aa6ff;color:#0b1220;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 0 0 4px rgba(122,166,255,.25)">${n}</div>`,
-        iconSize: [28,28],
-        iconAnchor: [14,14]
-      });
-    }
-
-    function popupHtml(p, idx, latlng){
-      const g = googleMapsLink(latlng[0], latlng[1], p.name);
-      return `
-        <div style="font-family:system-ui;min-width:220px">
-          <div style="font-weight:800;margin-bottom:4px">${idx}. ${p.emoji} ${p.name}</div>
-          <div style="font-size:12px;opacity:.9;margin-bottom:6px">${p.note}</div>
-          <div style="font-size:11px;opacity:.75;margin-bottom:10px">${p.address}</div>
-          <a href="${g}" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
-        </div>
-      `;
-    }
-
-    function renderPoiList(keys){
-      const ul = document.getElementById('poiList');
-      ul.innerHTML = '';
-      (keys || []).forEach((k, i) => {
-        const p = POIS.find(x => x.key === k);
-        if(!p) return;
-        const li = document.createElement('li');
-        li.className = 'item';
-        li.innerHTML = `
-          <div class="badge"></div>
-          <div>
-            <p class="t">${i+1}. ${p.emoji} ${p.name}</p>
-            <p class="d">${p.note}<br><span class="small">${p.address}</span></p>
-          </div>
-          <div class="actions"><button class="secondary" data-focus="${p.key}">Zoom</button></div>
-        `;
-        ul.appendChild(li);
-      });
-    }
-
-    async function geocode(address){
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if(!res.ok) throw new Error('Geocode failed');
-      const data = await res.json();
-      if(!data || !data[0]) throw new Error('No results');
-      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-    }
-
-    function makeMarker(p, latlng){
-      const m = L.marker(latlng, { icon: makeNumberIcon(1) });
-      m.bindPopup(popupHtml(p, 1, latlng));
-      m.addTo(layerAll);
-      markers.set(p.key, { marker: m, latlng, poi: p });
-    }
-
-    function fitToKeys(keys){
-      const pts = (keys || [])
-        .map(k => markers.get(k)?.latlng)
-        .filter(Boolean)
-        .map(ll => L.latLng(ll[0], ll[1]));
-      if(!pts.length) return;
-      map.fitBounds(L.latLngBounds(pts).pad(0.22));
-    }
-
-    function focusKey(key){
-      const rec = markers.get(key);
-      if(!rec) return;
-      map.setView(rec.latlng, 16);
-      rec.marker.openPopup();
-    }
-
-    function clearRoute(){
-      if(routeLine){
-        routeLine.remove();
-        routeLine = null;
-      }
-    }
-
-    function drawRoute(keys){
-      clearRoute();
-      const pts = (keys || [])
-        .map(k => markers.get(k)?.latlng)
-        .filter(Boolean);
-      if(pts.length < 2) return;
-      routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
-    }
-
-    function setMarkerVisibility(visibleKeys){
-      layerAll.clearLayers();
-      visibleKeys.forEach(k => {
-        const rec = markers.get(k);
-        if(rec) rec.marker.addTo(layerAll);
-      });
-    }
-
-    function renumber(keysInOrder){
-      keysInOrder.forEach((key, i) => {
-        const rec = markers.get(key);
-        if(!rec) return;
-        const idx = i + 1;
-        rec.marker.setIcon(makeNumberIcon(idx));
-        rec.marker.setPopupContent(popupHtml(rec.poi, idx, rec.latlng));
-      });
-      renderPoiList(keysInOrder);
-    }
-
-    // --- Localisation ---
-    let meMarker = null;
-    let meCircle = null;
-
-    function locateMe(silent=false){
-      if(!navigator.geolocation){
-        if(!silent) alert("La géolocalisation n’est pas disponible sur cet appareil.");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const acc = Math.max(20, pos.coords.accuracy || 80);
-
-          if(meMarker) meMarker.remove();
-          if(meCircle) meCircle.remove();
-
-          meMarker = L.circleMarker([lat,lng], { radius: 7, weight: 2, opacity: 1, fillOpacity: 0.6 }).addTo(map);
-          meCircle = L.circle([lat,lng], { radius: acc, weight: 1, opacity: 0.6, fillOpacity: 0.08 }).addTo(map);
-
-          meMarker.bindPopup(`<div style="font-family:system-ui"><b>📍 Vous êtes ici</b><br><span style="font-size:12px;opacity:.8">Précision ~${Math.round(acc)} m</span></div>`);
-          map.setView([lat,lng], 15);
-          meMarker.openPopup();
-        },
-        (err) => {
-          if(!silent) alert("Impossible de vous localiser (permission refusée ou signal faible).\nSur iPhone web app, il faut souvent ouvrir la page en HTTPS.");
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-      );
-    }
-
-    // --- Parcours prédéfinis ---
+    // --- Routes ---
     const ROUTES = {
-      all: ["airport","piazzale","hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","alparadiso","cannaregiobar","restaurant","doge"],
+      all: POIS.map(p => p.key),
       fri: ["airport","piazzale","hotel"],
       sat: ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","alparadiso","cannaregiobar","restaurant"],
       sun: ["hotel","doge"],
@@ -365,47 +386,135 @@
       return: ["hotel","piazzale","airport"],
     };
 
-    function showMode(mode){
+    // --- Carte Setup ---
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.4342, 12.3364], 13);
+    
+    // Carte sombre simplifiée (CartoDB DarkMatter) pour le look "App"
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd'
+    }).addTo(map);
+
+    const layerAll = L.layerGroup().addTo(map);
+    const markers = new Map();
+    let routeLine = null;
+
+    // --- Functions Helpers ---
+    function googleMapsLink(lat, lon, label){
+      return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+    }
+
+    function makeIcon(n){
+      return L.divIcon({
+        className: 'num-icon',
+        html: `<div style="background:#0a84ff;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.5)">${n}</div>`,
+        iconSize: [24,24],
+        iconAnchor: [12,12]
+      });
+    }
+
+    function popupHtml(p){
+      return `
+        <div style="font-family:-apple-system, sans-serif;">
+          <div style="font-size:16px; margin-bottom:4px;">${p.emoji} <b>${p.name}</b></div>
+          <div style="font-size:13px; opacity:0.8; margin-bottom:8px;">${p.note}</div>
+          <a href="${googleMapsLink(markers.get(p.key).latlng.lat, markers.get(p.key).latlng.lng)}" target="_blank" style="color:#0a84ff; text-decoration:none; font-weight:600; font-size:12px;">Ouvrir dans Google Maps →</a>
+        </div>
+      `;
+    }
+
+    // --- Core Logic ---
+    async function geocode(address){
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      } catch(e){}
+      return null;
+    }
+
+    function makeMarker(p, latlng){
+      const m = L.marker(latlng, { icon: makeIcon(1) });
+      m.bindPopup(popupHtml(p));
+      markers.set(p.key, { marker: m, latlng, poi: p });
+    }
+
+    function clearRoute(){ if(routeLine){ routeLine.remove(); routeLine = null; } }
+    
+    function drawRoute(keys){
+      clearRoute();
+      const pts = keys.map(k => markers.get(k)?.latlng).filter(Boolean);
+      if(pts.length < 2) return;
+      routeLine = L.polyline(pts, { weight: 3, color: '#0a84ff', opacity: 0.8, dashArray: '5, 10' }).addTo(map);
+    }
+
+    function updateMap(mode){
+      // Update Active Chip
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.getElementById('btn' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+
       const keys = ROUTES[mode] || ROUTES.all;
-      setMarkerVisibility(keys);
-      renumber(keys);
-      fitToKeys(keys);
-      // Route : on ne trace que quand c’est pertinent (sinon on relie des points éloignés)
-      if(mode === 'fri' || mode === 'return' || mode === 'sun') drawRoute([keys[0], ...keys.slice(1), keys[0]].filter(Boolean));
-      else if(mode === 'sat') drawRoute(keys);
-      else if(mode === 'food') drawRoute(keys);
+      layerAll.clearLayers();
+      
+      keys.forEach((k, i) => {
+        const rec = markers.get(k);
+        if(rec){
+          rec.marker.setIcon(makeIcon(i+1));
+          rec.marker.addTo(layerAll);
+        }
+      });
+
+      const pts = keys.map(k => markers.get(k)?.latlng).filter(Boolean);
+      if(pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.3));
+
+      // Draw lines for logic routes
+      if(['fri','sat','return','food'].includes(mode)) drawRoute(keys);
       else clearRoute();
+    }
+
+    // --- Localisation ---
+    let meMarker = null;
+    function locateMe(){
+      if(!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        const ll = [pos.coords.latitude, pos.coords.longitude];
+        if(meMarker) meMarker.remove();
+        meMarker = L.circleMarker(ll, { radius: 8, color: 'white', weight: 2, fillColor: '#30d158', fillOpacity: 1 }).addTo(map);
+        map.setView(ll, 15);
+      }, err => console.log(err), { enableHighAccuracy: true });
     }
 
     // --- Init ---
     async function init(){
-      // Géocode en série (plus gentil avec Nominatim)
       for (const p of POIS){
-        try{
-          const latlng = await geocode(p.address);
-          makeMarker(p, latlng);
-        }catch(e){
-          makeMarker(p, p.fallback);
-        }
+        let latlng = p.fallback;
+        // Optionnel: Décommenter si tu veux vraiment re-géocoder à chaque chargement (lent)
+        // const geo = await geocode(p.address);
+        // if(geo) latlng = geo;
+        makeMarker(p, latlng);
       }
 
-      // UI buttons
-      document.getElementById('btnAll').addEventListener('click', () => showMode('all'));
-      document.getElementById('btnFri').addEventListener('click', () => showMode('fri'));
-      document.getElementById('btnSat').addEventListener('click', () => showMode('sat'));
-      document.getElementById('btnSun').addEventListener('click', () => showMode('sun'));
-      document.getElementById('btnFood').addEventListener('click', () => showMode('food'));
-      document.getElementById('btnReturn').addEventListener('click', () => showMode('return'));
-      document.getElementById('btnLocate').addEventListener('click', () => locateMe(false));
+      // Events
+      ['All','Fri','Sat','Sun','Food','Return'].forEach(k => {
+        const id = 'btn' + k;
+        document.getElementById(id).addEventListener('click', () => updateMap(k.toLowerCase()));
+      });
+      
+      document.getElementById('btnLocate').addEventListener('click', locateMe);
 
       document.body.addEventListener('click', (ev) => {
         const btn = ev.target.closest('button[data-focus]');
-        if(!btn) return;
-        focusKey(btn.dataset.focus);
+        if(btn && markers.get(btn.dataset.focus)){
+          const rec = markers.get(btn.dataset.focus);
+          map.setView(rec.latlng, 16);
+          rec.marker.openPopup();
+          // Scroll to top mobile UX
+          window.scrollTo({top:0, behavior:'smooth'}); 
+        }
       });
 
-      // Vue par défaut
-      showMode('all');
+      updateMap('all');
     }
 
     init();
