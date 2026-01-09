@@ -167,150 +167,49 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
     // --- Données du week-end ---
-    // On géocode côté navigateur (Nominatim) pour obtenir des points exacts.
-    // Fallback approx. si Nominatim est temporairement indispo.
-    const POIS = [
-      {
-        key: "airport",
-        name: "Aéroport Marco Polo (VCE)",
-        address: "Venice Marco Polo Airport, Tessera, Venezia, Italy",
-        fallback: [45.5053, 12.3519],
-        day: ["fri","return"],
-        emoji: "✈️",
-        note: "Arrivée vendredi / retour dimanche",
-      },
-      {
-        key: "piazzale",
-        name: "Piazzale Roma",
-        address: "Piazzale Roma, Venezia, Italy",
-        fallback: [45.4380, 12.3181],
-        day: ["fri","return"],
-        emoji: "🚌",
-        note: "Hub bus (ATVO/ACTV) + départ vaporetti",
-      },
-      {
-        key: "hotel",
-        name: "Hôtel (Duodo Palace) — Calle Minelli",
-        address: "Calle Minelli 1887/1888, 30124 Venezia VE, Italy",
-        fallback: [45.4339, 12.3320],
-        day: ["fri","sat","sun","return"],
-        emoji: "🏨",
-        note: "Votre base — San Marco",
-      },
-      {
-        key: "stmarks",
-        name: "Place & Basilique Saint‑Marc",
-        address: "Basilica di San Marco, Piazza San Marco, Venezia, Italy",
-        fallback: [45.4342, 12.3378],
-        day: ["sat"],
-        emoji: "🕍",
-        note: "Arriver tôt (sans résa = file)",
-      },
-      {
-        key: "campanile",
-        name: "Campanile de Saint‑Marc",
-        address: "Campanile di San Marco, Venezia, Italy",
-        fallback: [45.4340, 12.3390],
-        day: ["sat"],
-        emoji: "🔭",
-        note: "Vue panoramique (si beau temps)",
-      },
-      {
-        key: "rialto",
-        name: "Pont du Rialto",
-        address: "Rialto Bridge, Venezia, Italy",
-        fallback: [45.4380, 12.3358],
-        day: ["sat"],
-        emoji: "🌉",
-        note: "Zone cicchetti + balade Grand Canal",
-      },
-      {
-        key: "allarco",
-        name: "All’Arco (cicchetti)",
-        address: "Osteria All'Arco, Venezia, Italy",
-        fallback: [45.4384, 12.3353],
-        day: ["sat"],
-        emoji: "🥪",
-        note: "Cicchetti culte (souvent jusqu’à ~15h)",
-      },
-      {
-        key: "domori",
-        name: "Cantina Do Mori (cicchetti)",
-        address: "Cantina Do Mori, Venezia, Italy",
-        fallback: [45.4381, 12.3360],
-        day: ["sat"],
-        emoji: "🍷",
-        note: "Cicchetti près du Rialto",
-      },
-      {
-        key: "acquaalta",
-        name: "Libreria Acqua Alta",
-        address: "Libreria Acqua Alta, Venezia, Italy",
-        fallback: [45.4370, 12.3433],
-        day: ["sat"],
-        emoji: "📚",
-        note: "Incontournable (souvent bondé l’après‑midi)",
-      },
-      {
-        key: "miracoli",
-        name: "Santa Maria dei Miracoli",
-        address: "Chiesa di Santa Maria dei Miracoli, Venezia, Italy",
-        fallback: [45.4400, 12.3362],
-        day: ["sat"],
-        emoji: "⛪",
-        note: "Horaires parfois variables",
-      },
-      {
-        key: "restaurant",
-        name: "Restaurant samedi soir (Cannaregio 1268)",
-        address: "Cannaregio, 1268, 30121 Venezia VE, Italy",
-        fallback: [45.4440, 12.3253],
-        day: ["sat"],
-        emoji: "🍽️",
-        note: "Réservation conseillée",
-      },
-      {
-        key: "alparadiso",
-        name: "Al Timon / Vino Vero (bacari)",
-        address: "Fondamenta della Misericordia, Venezia, Italy",
-        fallback: [45.4473, 12.3269],
-        day: ["sat"],
-        emoji: "🍹",
-        note: "Apéro très local au bord de l’eau",
-      },
-      {
-        key: "cannaregiobar",
-        name: "Cantina Aziende Agricole (bacaro)",
-        address: "Fondamenta della Misericordia, Venezia, Italy",
-        fallback: [45.4470, 12.3274],
-        day: ["sat"],
-        emoji: "🍷",
-        note: "Spritz et ambiance vénitienne",
-      },
+    // Géocodage côté navigateur (Nominatim) pour avoir des points exacts.
+    // Fallback approx. si Nominatim est indispo.
 
-      {
-        key: "doge",
-        name: "Palais des Doges",
-        address: "Doge's Palace, Piazza San Marco, Venezia, Italy",
-        fallback: [45.4339, 12.3404],
-        day: ["sun"],
-        emoji: "🏛️",
-        note: "Option dimanche matin",
-      },
+    const POIS = [
+      { key: "airport", name: "Aéroport Marco Polo (VCE)", address: "Venice Marco Polo Airport, Tessera, Venezia, Italy", fallback: [45.5053, 12.3519], day: ["fri","return"], emoji: "✈️", note: "Arrivée vendredi / retour dimanche" },
+      { key: "piazzale", name: "Piazzale Roma", address: "Piazzale Roma, Venezia, Italy", fallback: [45.4380, 12.3181], day: ["fri","return"], emoji: "🚌", note: "Hub bus (ATVO/ACTV) + départ vaporetti" },
+      { key: "hotel", name: "Hôtel — Calle Minelli (San Marco)", address: "Calle Minelli 1887/1888, 30124 Venezia VE, Italy", fallback: [45.4339, 12.3320], day: ["fri","sat","sun","return"], emoji: "🏨", note: "Votre base — San Marco" },
+      { key: "stmarks", name: "Place & Basilique Saint-Marc", address: "Basilica di San Marco, Piazza San Marco, Venezia, Italy", fallback: [45.4342, 12.3378], day: ["sat"], emoji: "🕍", note: "Arriver tôt (sans résa = file)" },
+      { key: "campanile", name: "Campanile de Saint-Marc", address: "Campanile di San Marco, Venezia, Italy", fallback: [45.4340, 12.3390], day: ["sat"], emoji: "🔭", note: "Vue panoramique (si beau temps)" },
+      { key: "rialto", name: "Pont du Rialto", address: "Rialto Bridge, Venezia, Italy", fallback: [45.4380, 12.3358], day: ["sat"], emoji: "🌉", note: "Zone cicchetti + balade Grand Canal" },
+      { key: "allarco", name: "All’Arco (cicchetti)", address: "Osteria All'Arco, Venezia, Italy", fallback: [45.4384, 12.3353], day: ["sat"], emoji: "🥪", note: "Cicchetti culte (souvent jusqu’à ~15h)" },
+      { key: "domori", name: "Cantina Do Mori (cicchetti)", address: "Cantina Do Mori, Venezia, Italy", fallback: [45.4381, 12.3360], day: ["sat"], emoji: "🍷", note: "Cicchetti près du Rialto" },
+      { key: "acquaalta", name: "Libreria Acqua Alta", address: "Libreria Acqua Alta, Venezia, Italy", fallback: [45.4370, 12.3433], day: ["sat"], emoji: "📚", note: "Incontournable (souvent bondé l’après-midi)" },
+      { key: "miracoli", name: "Santa Maria dei Miracoli", address: "Chiesa di Santa Maria dei Miracoli, Venezia, Italy", fallback: [45.4400, 12.3362], day: ["sat"], emoji: "⛪", note: "Horaires parfois variables" },
+      { key: "restaurant", name: "Restaurant samedi soir (Cannaregio 1268)", address: "Cannaregio, 1268, 30121 Venezia VE, Italy", fallback: [45.4440, 12.3253], day: ["sat"], emoji: "🍽️", note: "Réservation conseillée" },
+      { key: "alparadiso", name: "Al Timon / Vino Vero (bacari)", address: "Fondamenta della Misericordia, Venezia, Italy", fallback: [45.4473, 12.3269], day: ["sat"], emoji: "🍹", note: "Apéro très local au bord de l’eau" },
+      { key: "cannaregiobar", name: "Bacaro (Fond. Misericordia)", address: "Fondamenta della Misericordia, Venezia, Italy", fallback: [45.4470, 12.3274], day: ["sat"], emoji: "🍷", note: "Spritz et ambiance vénitienne" },
+      { key: "doge", name: "Palais des Doges", address: "Doge's Palace, Piazza San Marco, Venezia, Italy", fallback: [45.4339, 12.3404], day: ["sun"], emoji: "🏛️", note: "Option dimanche matin" },
     ];
+
+    // --- Debug minimal : afficher une alerte si erreur JS (utile sur mobile) ---
+    window.addEventListener('error', (e) => {
+      const msg = (e?.error?.message || e.message || 'Erreur inconnue');
+      console.error(e.error || e);
+      // évite de spammer
+      if(!window.__errShown){
+        window.__errShown = true;
+        alert('Erreur sur la page : ' + msg + '\n(Je peux corriger si tu me dis ce message)');
+      }
+    });
 
     // --- Carte ---
     const map = L.map('map', { zoomControl: true }).setView([45.4342, 12.3364], 13);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
 
     const layerAll = L.layerGroup().addTo(map);
-    const markers = new Map();
+    const markers = new Map(); // key -> { marker, latlng, poi }
     let routeLine = null;
 
+    // --- Helpers ---
     function googleMapsLink(lat, lon, label){
       const q = encodeURIComponent(label || (lat + ',' + lon));
       return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}(${q})`;
@@ -337,16 +236,11 @@
       `;
     }
 
-    let currentListKeys = POIS.map(p=>p.key);
-
-function renderPoiList(keys){
+    function renderPoiList(keys){
       const ul = document.getElementById('poiList');
       ul.innerHTML = '';
-      const ordered = (keys && keys.length) ? keys : POIS.map(p=>p.key);
-      currentListKeys = ordered.slice();
-
-      ordered.forEach((k, i) => {
-        const p = POIS.find(x=>x.key===k);
+      (keys || []).forEach((k, i) => {
+        const p = POIS.find(x => x.key === k);
         if(!p) return;
         const li = document.createElement('li');
         li.className = 'item';
@@ -360,7 +254,6 @@ function renderPoiList(keys){
         `;
         ul.appendChild(li);
       });
-    });
     }
 
     async function geocode(address){
@@ -373,83 +266,26 @@ function renderPoiList(keys){
     }
 
     function makeMarker(p, latlng){
-      // Numéro par défaut (sera renuméroté selon le filtre actif)
       const m = L.marker(latlng, { icon: makeNumberIcon(1) });
       m.bindPopup(popupHtml(p, 1, latlng));
       m.addTo(layerAll);
-      markers.set(p.key, { marker: m, latlng, poi: p, currentIndex: 1 });
+      markers.set(p.key, { marker: m, latlng, poi: p });
     }
 
-    let meMarker = null;
-let meCircle = null;
+    function fitToKeys(keys){
+      const pts = (keys || [])
+        .map(k => markers.get(k)?.latlng)
+        .filter(Boolean)
+        .map(ll => L.latLng(ll[0], ll[1]));
+      if(!pts.length) return;
+      map.fitBounds(L.latLngBounds(pts).pad(0.22));
+    }
 
-function locateMe(silent=false){
-  // iOS “web app” (ajout à l’écran d’accueil) : la géoloc est plus stricte.
-  // 1) page en HTTPS recommandé, 2) permission activée dans Réglages > Confidentialité > Service de localisation.
-  // 3) souvent, une action utilisateur (clic) est nécessaire => bouton 📍 Moi.
-
-  if(!navigator.geolocation){
-    if(!silent) alert("La géolocalisation n’est pas disponible sur cet appareil.");
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = Math.max(20, pos.coords.accuracy || 80);
-
-      if(meMarker) meMarker.remove();
-      if(meCircle) meCircle.remove();
-
-      meMarker = L.circleMarker([lat,lng], { radius: 7, weight: 2, opacity: 1, fillOpacity: 0.6 }).addTo(map);
-      meCircle = L.circle([lat,lng], { radius: acc, weight: 1, opacity: 0.6, fillOpacity: 0.08 }).addTo(map);
-
-      meMarker.bindPopup(`<div style="font-family:system-ui"><b>📍 Vous êtes ici</b><br><span style="font-size:12px;opacity:.8">Précision ~${Math.round(acc)} m</span></div>`);
-      map.setView([lat,lng], 15);
-      meMarker.openPopup();
-    },
-    (err) => {
-      if(!silent) alert("Impossible de vous localiser (permission refusée ou signal faible). Vous pouvez toujours utiliser les points et itinéraires.");
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
-  );
-}
-
-async function init(){
-      renderPoiList(POIS.map(p=>p.key));
-
-      // Geocode en série (plus gentil avec Nominatim)
-      for (const p of POIS){
-        try{
-          const latlng = await geocode(p.address);
-          makeMarker(p, latlng);
-        }catch(e){
-          makeMarker(p, p.fallback);
-        }
-      }
-
-      // Vue générale
-      fitToKeys(POIS.map(p=>p.key));
-
-      // Events
-      document.getElementById('btnAll').addEventListener('click', () => showDay('all'));
-      document.getElementById('btnFri').addEventListener('click', () => showDay('fri'));
-      document.getElementById('btnSat').addEventListener('click', () => showDay('sat'));
-      document.getElementById('btnSun').addEventListener('click', () => showDay('sun'));
-      document.getElementById('btnFood').addEventListener('click', () => showDay('food'));
-      document.getElementById('btnLocate').addEventListener('click', locateMe);
-
-      // iPhone (ajout à l’écran d’accueil / web app) : la géoloc peut être bloquée si la page n’est pas en HTTPS.
-      // On ne lance donc pas l’autolocalisation ici : utilisez le bouton « 📍 Moi ».
-      // (Si vous hébergez cette page en HTTPS, vous pouvez réactiver une autolocalisation si vous voulez.)
-
-      document.getElementById('btnReturn').addEventListener('click', () => showDay('return'));
-
-      document.body.addEventListener('click', (ev) => {
-        const btn = ev.target.closest('button[data-focus]');
-        if(!btn) return;
-        focusKey(btn.dataset.focus);
-      });
+    function focusKey(key){
+      const rec = markers.get(key);
+      if(!rec) return;
+      map.setView(rec.latlng, 16);
+      rec.marker.openPopup();
     }
 
     function clearRoute(){
@@ -461,110 +297,115 @@ async function init(){
 
     function drawRoute(keys){
       clearRoute();
-      const pts = keys
+      const pts = (keys || [])
         .map(k => markers.get(k)?.latlng)
         .filter(Boolean);
       if(pts.length < 2) return;
       routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
     }
 
-    function fitToKeys(keys){
-      const pts = keys
-        .map(k => markers.get(k)?.latlng)
-        .filter(Boolean)
-        .map(ll => L.latLng(ll[0], ll[1]));
-      if(!pts.length) return;
-      const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds.pad(0.22));
-    }
-
-    function focusKey(key){
-      const rec = markers.get(key);
-      if(!rec) return;
-      map.setView(rec.latlng, 16);
-      rec.marker.openPopup();
-    }
-
-    function setMarkerVisibility(predicate){
+    function setMarkerVisibility(visibleKeys){
       layerAll.clearLayers();
-      const visibleKeys = [];
-      markers.forEach((rec, key) => {
-        const p = rec.poi || POIS.find(x=>x.key===key);
-        if(!p) return;
-        if(predicate(p)){
-          rec.marker.addTo(layerAll);
-          visibleKeys.push(key);
-        }
+      visibleKeys.forEach(k => {
+        const rec = markers.get(k);
+        if(rec) rec.marker.addTo(layerAll);
       });
-      return visibleKeys;
-    });
     }
 
     function renumber(keysInOrder){
-      // Renumérote seulement les points visibles, dans l’ordre fourni.
       keysInOrder.forEach((key, i) => {
         const rec = markers.get(key);
         if(!rec) return;
         const idx = i + 1;
-        rec.currentIndex = idx;
         rec.marker.setIcon(makeNumberIcon(idx));
         rec.marker.setPopupContent(popupHtml(rec.poi, idx, rec.latlng));
       });
-      // Met aussi la liste à gauche dans le même ordre/numérotation
       renderPoiList(keysInOrder);
-    });
     }
 
-    function showDay(day){
-      clearRoute();
-      if(day === 'all'){
-        const keys = POIS.map(p=>p.key);
-        setMarkerVisibility(()=>true);
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(["airport","piazzale","hotel","stmarks","rialto","allarco","domori","acquaalta","miracoli","restaurant","piazzale","airport"]);
+    // --- Localisation ---
+    let meMarker = null;
+    let meCircle = null;
+
+    function locateMe(silent=false){
+      if(!navigator.geolocation){
+        if(!silent) alert("La géolocalisation n’est pas disponible sur cet appareil.");
         return;
       }
-      if(day === 'fri'){
-        const keys = ["airport","piazzale","hotel"];
-        setMarkerVisibility(p=>p.day.includes('fri'));
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(keys);
-        return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const acc = Math.max(20, pos.coords.accuracy || 80);
+
+          if(meMarker) meMarker.remove();
+          if(meCircle) meCircle.remove();
+
+          meMarker = L.circleMarker([lat,lng], { radius: 7, weight: 2, opacity: 1, fillOpacity: 0.6 }).addTo(map);
+          meCircle = L.circle([lat,lng], { radius: acc, weight: 1, opacity: 0.6, fillOpacity: 0.08 }).addTo(map);
+
+          meMarker.bindPopup(`<div style="font-family:system-ui"><b>📍 Vous êtes ici</b><br><span style="font-size:12px;opacity:.8">Précision ~${Math.round(acc)} m</span></div>`);
+          map.setView([lat,lng], 15);
+          meMarker.openPopup();
+        },
+        (err) => {
+          if(!silent) alert("Impossible de vous localiser (permission refusée ou signal faible).\nSur iPhone web app, il faut souvent ouvrir la page en HTTPS.");
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    }
+
+    // --- Parcours prédéfinis ---
+    const ROUTES = {
+      all: ["airport","piazzale","hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","alparadiso","cannaregiobar","restaurant","doge"],
+      fri: ["airport","piazzale","hotel"],
+      sat: ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","alparadiso","cannaregiobar","restaurant"],
+      sun: ["hotel","doge"],
+      food: ["allarco","domori","alparadiso","cannaregiobar","restaurant"],
+      return: ["hotel","piazzale","airport"],
+    };
+
+    function showMode(mode){
+      const keys = ROUTES[mode] || ROUTES.all;
+      setMarkerVisibility(keys);
+      renumber(keys);
+      fitToKeys(keys);
+      // Route : on ne trace que quand c’est pertinent (sinon on relie des points éloignés)
+      if(mode === 'fri' || mode === 'return' || mode === 'sun') drawRoute([keys[0], ...keys.slice(1), keys[0]].filter(Boolean));
+      else if(mode === 'sat') drawRoute(keys);
+      else if(mode === 'food') drawRoute(keys);
+      else clearRoute();
+    }
+
+    // --- Init ---
+    async function init(){
+      // Géocode en série (plus gentil avec Nominatim)
+      for (const p of POIS){
+        try{
+          const latlng = await geocode(p.address);
+          makeMarker(p, latlng);
+        }catch(e){
+          makeMarker(p, p.fallback);
+        }
       }
-      if(day === 'sat'){
-        const keys = ["hotel","stmarks","campanile","rialto","allarco","domori","acquaalta","miracoli","restaurant"];
-        setMarkerVisibility(p=>p.day.includes('sat') || p.key==="hotel");
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(keys);
-        return;
-      }
-      if(day === 'sun'){
-        const keys = ["hotel","doge"];
-        setMarkerVisibility(p=>p.day.includes('sun') || p.key==="hotel");
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(["hotel","doge","hotel"]);
-        return;
-      }
-      if(day === 'food'){
-        const keys = ["allarco","domori","alparadiso","cannaregiobar","restaurant"];
-        setMarkerVisibility(p=>keys.includes(p.key));
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(keys);
-        return;
-      }
-      if(day === 'return'){
-        const keys = ["hotel","piazzale","airport"];
-        setMarkerVisibility(p=>p.day.includes('return'));
-        renumber(keys);
-        fitToKeys(keys);
-        drawRoute(keys);
-        return;
-      }
+
+      // UI buttons
+      document.getElementById('btnAll').addEventListener('click', () => showMode('all'));
+      document.getElementById('btnFri').addEventListener('click', () => showMode('fri'));
+      document.getElementById('btnSat').addEventListener('click', () => showMode('sat'));
+      document.getElementById('btnSun').addEventListener('click', () => showMode('sun'));
+      document.getElementById('btnFood').addEventListener('click', () => showMode('food'));
+      document.getElementById('btnReturn').addEventListener('click', () => showMode('return'));
+      document.getElementById('btnLocate').addEventListener('click', () => locateMe(false));
+
+      document.body.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-focus]');
+        if(!btn) return;
+        focusKey(btn.dataset.focus);
+      });
+
+      // Vue par défaut
+      showMode('all');
     }
 
     init();
