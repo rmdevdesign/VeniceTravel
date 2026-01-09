@@ -86,9 +86,10 @@
           <button class="secondary" id="btnSun">Dimanche</button>
           <button class="secondary" id="btnFood">Cicchetti & Bacari</button>
           <button class="secondary" id="btnReturn">Retour aéroport</button>
+          <button class="secondary" id="btnLocate">📍 Moi</button>
         </div>
         <div class="divider"></div>
-        <div class="small">Astuce : cliquez un point sur la carte → bouton “Google Maps”.</div>
+        <div class="small">Astuce : cliquez un point sur la carte → lien Google Maps. Pour vous localiser sur iPhone (web app), appuyez sur <b>📍 Moi</b> et assurez-vous d’ouvrir la page en <b>HTTPS</b> (sinon iOS bloque souvent la géoloc).</div>
       </div>
 
       <div class="card">
@@ -364,7 +365,42 @@
       markers.set(p.key, { marker: m, latlng });
     }
 
-    async function init(){
+    let meMarker = null;
+let meCircle = null;
+
+function locateMe(silent=false){
+  // iOS “web app” (ajout à l’écran d’accueil) : la géoloc est plus stricte.
+  // 1) page en HTTPS recommandé, 2) permission activée dans Réglages > Confidentialité > Service de localisation.
+  // 3) souvent, une action utilisateur (clic) est nécessaire => bouton 📍 Moi.
+
+  if(!navigator.geolocation){
+    if(!silent) alert("La géolocalisation n’est pas disponible sur cet appareil.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = Math.max(20, pos.coords.accuracy || 80);
+
+      if(meMarker) meMarker.remove();
+      if(meCircle) meCircle.remove();
+
+      meMarker = L.circleMarker([lat,lng], { radius: 7, weight: 2, opacity: 1, fillOpacity: 0.6 }).addTo(map);
+      meCircle = L.circle([lat,lng], { radius: acc, weight: 1, opacity: 0.6, fillOpacity: 0.08 }).addTo(map);
+
+      meMarker.bindPopup(`<div style="font-family:system-ui"><b>📍 Vous êtes ici</b><br><span style="font-size:12px;opacity:.8">Précision ~${Math.round(acc)} m</span></div>`);
+      map.setView([lat,lng], 15);
+      meMarker.openPopup();
+    },
+    (err) => {
+      if(!silent) alert("Impossible de vous localiser (permission refusée ou signal faible). Vous pouvez toujours utiliser les points et itinéraires.");
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+  );
+}
+
+async function init(){
       renderPoiList();
 
       // Geocode en série (plus gentil avec Nominatim)
@@ -386,6 +422,11 @@
       document.getElementById('btnSat').addEventListener('click', () => showDay('sat'));
       document.getElementById('btnSun').addEventListener('click', () => showDay('sun'));
       document.getElementById('btnFood').addEventListener('click', () => showDay('food'));
+      document.getElementById('btnLocate').addEventListener('click', locateMe);
+
+      // iPhone (ajout à l’écran d’accueil / web app) : la géoloc peut être bloquée si la page n’est pas en HTTPS.
+      // On ne lance donc pas l’autolocalisation ici : utilisez le bouton « 📍 Moi ».
+      // (Si vous hébergez cette page en HTTPS, vous pouvez réactiver une autolocalisation si vous voulez.)
 
       document.getElementById('btnReturn').addEventListener('click', () => showDay('return'));
 
@@ -401,6 +442,9 @@
         routeLine.remove();
         routeLine = null;
       }
+      if(window.arrowLayer){
+        window.arrowLayer.clearLayers();
+      }
     }
 
     function drawRoute(keys){
@@ -413,22 +457,28 @@
       // Ligne principale
       routeLine = L.polyline(pts, { weight: 4, opacity: 0.85 }).addTo(map);
 
-      // Flèches directionnelles
+      // Flèches directionnelles (dans un layer dédié)
+      if(!window.arrowLayer){
+        window.arrowLayer = L.layerGroup().addTo(map);
+      }
+
       for(let i = 0; i < pts.length - 1; i++){
         const start = L.latLng(pts[i][0], pts[i][1]);
         const end = L.latLng(pts[i+1][0], pts[i+1][1]);
-        const mid = L.latLng(
-          (start.lat + end.lat) / 2,
-          (start.lng + end.lng) / 2
-        );
-        const bearing = Math.atan2(end.lng - start.lng, end.lat - start.lat) * 180 / Math.PI;
+        const mid = L.latLng((start.lat + end.lat)/2, (start.lng + end.lng)/2);
+
+        // Bearing: 0° = nord. On ajuste pour tourner une flèche "➤" (qui pointe à droite).
+        const angleRad = Math.atan2(end.lat - start.lat, end.lng - start.lng);
+        const angleDeg = angleRad * 180 / Math.PI;
+
         const arrowIcon = L.divIcon({
           className: 'arrow-icon',
-          html: `<div style="transform: rotate(${bearing}deg); font-size:18px; color:#7aa6ff;">➤</div>`,
+          html: `<div style="transform: rotate(${angleDeg}deg); font-size:18px; color:#7aa6ff; text-shadow: 0 2px 10px rgba(0,0,0,.45);">➤</div>`,
           iconSize: [18,18],
           iconAnchor: [9,9]
         });
-        L.marker(mid, { icon: arrowIcon, interactive: false }).addTo(map);
+
+        L.marker(mid, { icon: arrowIcon, interactive: false }).addTo(window.arrowLayer);
       }
     }
 
