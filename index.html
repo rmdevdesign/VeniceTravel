@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Venise</title>
+  <title>Venise Mobile</title>
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   
   <style>
     :root {
       --bg: #000000;
       --card: #1c1c1e;
-      --card-border: rgba(255, 255, 255, 0.1);
+      --card-border: rgba(255, 255, 255, 0.12);
       --text: #ffffff;
       --subtext: #8e8e93;
       --accent: #0a84ff;
-      --accent-dim: rgba(10, 132, 255, 0.15);
+      --accent-dim: rgba(10, 132, 255, 0.2);
       --success: #30d158;
-      --warn: #ffd60a;
-      --danger: #ff453a;
-      --radius: 16px;
+      --radius: 18px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -32,29 +31,30 @@
       color: var(--text);
       display: flex;
       flex-direction: column;
-      height: 100vh; /* Fallback */
-      height: 100dvh; /* Dynamic viewport height */
+      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
     /* --- MAP SECTION (Top 40%) --- */
     #map-container {
-      flex: 0 0 40%;
+      height: 40vh;
+      width: 100%;
       position: relative;
       z-index: 1;
       border-bottom: 1px solid var(--card-border);
+      flex-shrink: 0; /* Empêche l'écrasement */
     }
-    #map { width: 100%; height: 100%; background: #242f3e; }
+    #map { width: 100%; height: 100%; background: #151515; }
     
-    /* Bouton Localisation flottant sur la carte */
     .locate-btn {
       position: absolute;
       top: 16px;
       right: 16px;
       z-index: 999;
-      background: rgba(28, 28, 30, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(28, 28, 30, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--card-border);
       color: var(--accent);
       width: 44px;
@@ -63,9 +63,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
 
     /* --- CONTENT SECTION (Bottom 60%) --- */
@@ -73,19 +73,18 @@
       flex: 1;
       overflow-y: auto;
       background: var(--bg);
-      padding-bottom: 40px; /* Safe area */
-      display: flex;
-      flex-direction: column;
+      padding-bottom: 50px;
+      position: relative;
     }
 
-    /* Sticky Filter Bar */
+    /* Sticky Filters */
     .filters-container {
       position: sticky;
       top: 0;
-      z-index: 10;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--card-border);
       padding: 12px 0;
     }
@@ -95,7 +94,7 @@
       gap: 10px;
       overflow-x: auto;
       padding: 0 16px;
-      scrollbar-width: none; /* Hide scrollbar Firefox */
+      scrollbar-width: none;
     }
     .scroll-chips::-webkit-scrollbar { display: none; }
 
@@ -103,7 +102,7 @@
       background: var(--card);
       border: 1px solid var(--card-border);
       color: var(--subtext);
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 20px;
       font-size: 14px;
       font-weight: 600;
@@ -111,136 +110,78 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .chip.active, .chip:active {
+    .chip.active {
       background: var(--accent);
       color: white;
       border-color: var(--accent);
     }
 
-    /* Main Content */
-    .section { padding: 16px 16px 0; }
-    
-    h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.5px; }
-    .subtitle { color: var(--subtext); font-size: 13px; margin-bottom: 16px; }
+    /* Sections & Text */
+    .section { padding: 20px 16px 0; }
+    h1 { font-size: 26px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.5px; }
+    .subtitle { color: var(--subtext); font-size: 13px; margin-bottom: 20px; font-weight: 500; }
+    h2 { font-size: 18px; font-weight: 700; margin: 24px 0 16px; color: #fff; }
 
-    /* Cards */
+    /* Info Card */
     .card {
       background: var(--card);
       border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 18px;
       margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px; padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .info-row:last-child { margin: 0; padding: 0; border: 0; }
-    .info-label { font-size: 14px; color: var(--subtext); }
-    .info-val { font-size: 14px; font-weight: 600; text-align: right; }
-    .highlight { color: var(--accent); }
-    
-    /* Checklist */
-    .check-item {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .check-icon { color: var(--success); font-size: 18px; }
-    .check-text { font-size: 14px; line-height: 1.4; }
-    .check-sub { font-size: 12px; color: var(--subtext); display: block; margin-top: 2px;}
+    .info-label { font-size: 14px; color: var(--subtext); display:flex; align-items:center; gap:8px;}
+    .info-val { font-size: 14px; font-weight: 600; text-align: right; line-height:1.4; }
 
-    /* List Items (Timeline) */
+    /* Timeline */
     .timeline-item {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 20px;
-      position: relative;
+      display: flex; gap: 16px; margin-bottom: 24px; position: relative;
     }
     .timeline-line {
-      position: absolute;
-      left: 7px;
-      top: 24px;
-      bottom: -20px;
-      width: 2px;
-      background: var(--card-border);
-      z-index: 0;
+      position: absolute; left: 7px; top: 28px; bottom: -28px; width: 2px;
+      background: #333; z-index: 0;
     }
     .timeline-item:last-child .timeline-line { display: none; }
-    
     .dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid var(--bg);
-      z-index: 1;
-      margin-top: 4px;
-      flex-shrink: 0;
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--bg); z-index: 1; margin-top: 6px; flex-shrink: 0;
     }
-
     .content-box {
-      flex: 1;
-      background: var(--card);
-      padding: 12px 14px;
-      border-radius: 12px;
-      position: relative;
+      flex: 1; background: var(--card); padding: 14px 16px; border-radius: 16px;
     }
     .time-badge {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--subtext);
-      margin-bottom: 4px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--subtext); margin-bottom: 6px; letter-spacing: 0.5px;
     }
-    .item-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .item-desc { font-size: 13px; color: var(--subtext); line-height: 1.4; margin-bottom: 8px; }
+    .item-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .item-desc { font-size: 14px; color: var(--subtext); line-height: 1.45; margin-bottom: 12px; }
     
     .zoom-btn {
-      display: inline-block;
-      font-size: 12px;
-      color: var(--accent);
-      font-weight: 600;
-      background: var(--accent-dim);
-      padding: 6px 12px;
-      border-radius: 99px;
-      border: none;
-      cursor: pointer;
+      background: var(--accent-dim); color: var(--accent);
+      font-size: 13px; font-weight: 600; padding: 8px 16px;
+      border-radius: 99px; border: none; cursor: pointer;
     }
 
     /* Links Grid */
-    .links-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 8px;
-    }
+    .links-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 40px; }
     .link-tile {
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
+      background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 6px;
+      text-align: center; text-decoration: none; color: white; font-size: 11px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
     }
-    .link-tile span { font-size: 18px; }
+    .link-tile span { font-size: 20px; }
 
-    /* Leaflet overrides */
+    /* Map Popup Style */
     .leaflet-popup-content-wrapper { 
-      background: rgba(28, 28, 30, 0.95) !important; 
-      backdrop-filter: blur(10px);
-      color: white !important; 
-      border-radius: 12px !important;
+      background: rgba(20, 20, 20, 0.95) !important; 
+      backdrop-filter: blur(10px); color: white !important; border-radius: 12px !important;
+      border: 1px solid rgba(255,255,255,0.2);
     }
-    .leaflet-popup-tip { background: rgba(28, 28, 30, 0.95) !important; }
+    .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95) !important; }
     .leaflet-container a { color: var(--accent) !important; }
 
   </style>
@@ -249,42 +190,42 @@
 
   <div id="map-container">
     <div id="map"></div>
-    <div class="locate-btn" id="btnLocate">📍</div>
+    <div class="locate-btn" id="btnLocate" role="button">📍</div>
   </div>
 
   <div id="content">
     
     <div class="filters-container">
       <div class="scroll-chips">
-        <button class="chip active" id="btnAll">Tout</button>
-        <button class="chip" id="btnFri">Ven.</button>
-        <button class="chip" id="btnSat">Sam.</button>
-        <button class="chip" id="btnSun">Dim.</button>
-        <button class="chip" id="btnFood">Food</button>
-        <button class="chip" id="btnReturn">Retour</button>
+        <div class="chip active" id="btnAll">Tout</div>
+        <div class="chip" id="btnFri">Ven.</div>
+        <div class="chip" id="btnSat">Sam.</div>
+        <div class="chip" id="btnSun">Dim.</div>
+        <div class="chip" id="btnFood">Food</div>
+        <div class="chip" id="btnReturn">Retour</div>
       </div>
     </div>
 
     <div class="section">
-      <h1>Week‑end à Venise</h1>
-      <div class="subtitle">Dimanche vol retour 20:00 • Début ~17:00</div>
+      <h1>Venise — Week-end</h1>
+      <div class="subtitle">Vol retour Dim. 20h00 • Hôtel San Marco</div>
 
       <div class="card">
         <div class="info-row">
-          <span class="info-label">🏨 Hôtel</span>
-          <span class="info-val">Calle Minelli<br><span style="font-size:12px;color:var(--subtext)">San Marco 1887</span></span>
+          <div class="info-label">🏨 Hôtel</div>
+          <div class="info-val">Calle Minelli<br><span style="font-size:12px;color:var(--subtext)">San Marco 1887</span></div>
         </div>
         <div class="info-row">
-          <span class="info-label">🍽️ Samedi soir</span>
-          <span class="info-val">Cannaregio, 1268<br><span style="font-size:12px;color:var(--success)">Réservé ✅</span></span>
+          <div class="info-label">🍽️ Samedi soir</div>
+          <div class="info-val">Cannaregio, 1268<br><span style="font-size:12px;color:var(--success)">Réservé ✅</span></div>
         </div>
         <div class="info-row">
-          <span class="info-label">⚠️ Astuce</span>
-          <span class="info-val" style="font-weight:400; font-size:13px">Basilique : sans résa,<br>venir tôt (09h00).</span>
+          <div class="info-label">⚠️ Astuce</div>
+          <div class="info-val" style="font-weight:400; font-size:13px">Basilique St-Marc :<br>Venir tôt (09h00).</div>
         </div>
       </div>
 
-      <h2 style="font-size:17px; margin:10px 0 15px;">Programme</h2>
+      <h2>Programme</h2>
       
       <div id="timeline-container">
         <div class="timeline-item">
@@ -343,40 +284,36 @@
         </div>
       </div>
 
-      <h2 style="font-size:17px; margin:20px 0 15px;">Liens Utiles</h2>
-      <div class="links-grid" style="margin-bottom: 40px;">
+      <h2>Liens Utiles</h2>
+      <div class="links-grid">
         <a href="https://www.basilicasanmarco.it/" target="_blank" class="link-tile"><span>🕍</span>Basilique</a>
         <a href="https://palazzoducale.visitmuve.it/" target="_blank" class="link-tile"><span>🏛️</span>Doges</a>
         <a href="https://www.atvo.it/" target="_blank" class="link-tile"><span>🚌</span>Bus ATVO</a>
-        <a href="https://actv.avmspa.it/" target="_blank" class="link-tile"><span>🚍</span>Vaporetto</a>
-        <a href="https://www.alilaguna.it/" target="_blank" class="link-tile"><span>⛴️</span>Alilaguna</a>
+        <a href="https://actv.avmspa.it/" target="_blank" class="link-tile"><span>⛴️</span>Vaporetto</a>
       </div>
-
-      <ul id="poiList" style="display:none"></ul>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
-    // --- Configuration des Points ---
+    // 1. DATA (Coordonnées "en dur" pour éviter les bugs de chargement)
     const POIS = [
-      { key: "airport", name: "Aéroport (VCE)", address: "Venice Marco Polo", fallback: [45.5053, 12.3519], emoji: "✈️", note: "Vol retour 20:00" },
-      { key: "piazzale", name: "Piazzale Roma", address: "Piazzale Roma, Venezia", fallback: [45.4380, 12.3181], emoji: "🚌", note: "Départ Bus & Vaporetto" },
-      { key: "hotel", name: "Hôtel (Calle Minelli)", address: "Calle Minelli 1887, Venezia", fallback: [45.4339, 12.3320], emoji: "🏨", note: "San Marco" },
-      { key: "stmarks", name: "Basilique St-Marc", address: "Piazza San Marco", fallback: [45.4342, 12.3378], emoji: "🕍", note: "Venir vers 09h00" },
-      { key: "campanile", name: "Campanile", address: "Campanile di San Marco", fallback: [45.4340, 12.3390], emoji: "🔭", note: "Vue panoramique" },
-      { key: "rialto", name: "Pont du Rialto", address: "Rialto Bridge", fallback: [45.4380, 12.3358], emoji: "🌉", note: "Coeur de ville" },
-      { key: "allarco", name: "All’Arco", address: "Osteria All'Arco", fallback: [45.4384, 12.3353], emoji: "🥪", note: "Meilleurs cicchetti" },
-      { key: "domori", name: "Cantina Do Mori", address: "Cantina Do Mori", fallback: [45.4381, 12.3360], emoji: "🍷", note: "Historique" },
-      { key: "acquaalta", name: "Libreria Acqua Alta", address: "Libreria Acqua Alta", fallback: [45.4370, 12.3433], emoji: "📚", note: "Livres & Gondole" },
-      { key: "miracoli", name: "Santa Maria dei Miracoli", address: "Chiesa di Santa Maria dei Miracoli", fallback: [45.4400, 12.3362], emoji: "⛪", note: "Marbre magnifique" },
-      { key: "restaurant", name: "Resto (Cannaregio 1268)", address: "Cannaregio 1268", fallback: [45.4440, 12.3253], emoji: "🍽️", note: "Dîner Samedi" },
-      { key: "alparadiso", name: "Al Timon / Vino Vero", address: "Fondamenta della Misericordia", fallback: [45.4473, 12.3269], emoji: "🍹", note: "Apéro local" },
-      { key: "cannaregiobar", name: "Bacaro Misericordia", address: "Fondamenta della Misericordia", fallback: [45.4470, 12.3274], emoji: "🍷", note: "Ambiance" },
-      { key: "doge", name: "Palais des Doges", address: "Doge's Palace", fallback: [45.4339, 12.3404], emoji: "🏛️", note: "Musée incontournable" },
+      { key: "airport", name: "Aéroport (VCE)", coords: [45.5053, 12.3519], emoji: "✈️", note: "Vol retour 20:00" },
+      { key: "piazzale", name: "Piazzale Roma", coords: [45.4380, 12.3181], emoji: "🚌", note: "Bus & Vaporetto" },
+      { key: "hotel", name: "Hôtel (Calle Minelli)", coords: [45.4339, 12.3320], emoji: "🏨", note: "San Marco" },
+      { key: "stmarks", name: "Basilique St-Marc", coords: [45.4342, 12.3378], emoji: "🕍", note: "Venir vers 09h00" },
+      { key: "campanile", name: "Campanile", coords: [45.4340, 12.3390], emoji: "🔭", note: "Vue panoramique" },
+      { key: "rialto", name: "Pont du Rialto", coords: [45.4380, 12.3358], emoji: "🌉", note: "Coeur de ville" },
+      { key: "allarco", name: "All’Arco", coords: [45.4384, 12.3353], emoji: "🥪", note: "Cicchetti top" },
+      { key: "domori", name: "Cantina Do Mori", coords: [45.4381, 12.3360], emoji: "🍷", note: "Historique" },
+      { key: "acquaalta", name: "Libreria Acqua Alta", coords: [45.4370, 12.3433], emoji: "📚", note: "Photo spot" },
+      { key: "miracoli", name: "Santa Maria dei Miracoli", coords: [45.4400, 12.3362], emoji: "⛪", note: "Marbre" },
+      { key: "restaurant", name: "Resto Cannaregio", coords: [45.4440, 12.3253], emoji: "🍽️", note: "Dîner Samedi" },
+      { key: "alparadiso", name: "Al Timon / Vino Vero", coords: [45.4473, 12.3269], emoji: "🍹", note: "Apéro local" },
+      { key: "cannaregiobar", name: "Bacaro Misericordia", coords: [45.4470, 12.3274], emoji: "🍷", note: "Ambiance" },
+      { key: "doge", name: "Palais des Doges", coords: [45.4339, 12.3404], emoji: "🏛️", note: "Musée" },
     ];
 
-    // --- Routes ---
     const ROUTES = {
       all: POIS.map(p => p.key),
       fri: ["airport","piazzale","hotel"],
@@ -386,138 +323,148 @@
       return: ["hotel","piazzale","airport"],
     };
 
-    // --- Carte Setup ---
-    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.4342, 12.3364], 13);
-    
-    // Carte sombre simplifiée (CartoDB DarkMatter) pour le look "App"
+    // 2. INIT MAP
+    const map = L.map('map', { 
+      zoomControl: false, 
+      attributionControl: false,
+      zoomSnap: 0.5 
+    }).setView([45.436, 12.335], 13.5);
+
+    // Fond de carte sombre fiable (CartoDB Dark)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
       subdomains: 'abcd'
     }).addTo(map);
 
-    const layerAll = L.layerGroup().addTo(map);
+    const layerGroup = L.layerGroup().addTo(map);
     const markers = new Map();
-    let routeLine = null;
+    let routePolyline = null;
+    let meMarker = null;
 
-    // --- Functions Helpers ---
-    function googleMapsLink(lat, lon, label){
-      return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
-    }
-
-    function makeIcon(n){
+    // 3. ICONS & HELPERS
+    function createIcon(num) {
       return L.divIcon({
-        className: 'num-icon',
-        html: `<div style="background:#0a84ff;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.5)">${n}</div>`,
-        iconSize: [24,24],
-        iconAnchor: [12,12]
+        className: 'custom-pin',
+        html: `<div style="background:#0a84ff;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 3px 6px rgba(0,0,0,0.4)">${num}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
       });
     }
 
-    function popupHtml(p){
+    function createPopup(p) {
       return `
-        <div style="font-family:-apple-system, sans-serif;">
-          <div style="font-size:16px; margin-bottom:4px;">${p.emoji} <b>${p.name}</b></div>
-          <div style="font-size:13px; opacity:0.8; margin-bottom:8px;">${p.note}</div>
-          <a href="${googleMapsLink(markers.get(p.key).latlng.lat, markers.get(p.key).latlng.lng)}" target="_blank" style="color:#0a84ff; text-decoration:none; font-weight:600; font-size:12px;">Ouvrir dans Google Maps →</a>
+        <div style="font-family:-apple-system,sans-serif; text-align:center; min-width:180px">
+          <div style="font-size:24px;margin-bottom:4px">${p.emoji}</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:2px">${p.name}</div>
+          <div style="font-size:12px;opacity:0.7;margin-bottom:8px">${p.note}</div>
+          <a href="https://maps.google.com/?q=${p.coords[0]},${p.coords[1]}" target="_blank" style="color:#0a84ff;font-weight:600;text-decoration:none;font-size:12px">Ouvrir Google Maps</a>
         </div>
       `;
     }
 
-    // --- Core Logic ---
-    async function geocode(address){
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if(data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      } catch(e){}
-      return null;
-    }
-
-    function makeMarker(p, latlng){
-      const m = L.marker(latlng, { icon: makeIcon(1) });
-      m.bindPopup(popupHtml(p));
-      markers.set(p.key, { marker: m, latlng, poi: p });
-    }
-
-    function clearRoute(){ if(routeLine){ routeLine.remove(); routeLine = null; } }
-    
-    function drawRoute(keys){
-      clearRoute();
-      const pts = keys.map(k => markers.get(k)?.latlng).filter(Boolean);
-      if(pts.length < 2) return;
-      routeLine = L.polyline(pts, { weight: 3, color: '#0a84ff', opacity: 0.8, dashArray: '5, 10' }).addTo(map);
-    }
-
-    function updateMap(mode){
-      // Update Active Chip
+    // 4. CORE FUNCTIONS
+    function renderMap(mode) {
+      // Update UI Chips
       document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      document.getElementById('btn' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+      const btn = document.getElementById('btn' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      if(btn) btn.classList.add('active');
+
+      layerGroup.clearLayers();
+      if(routePolyline) { routePolyline.remove(); routePolyline = null; }
 
       const keys = ROUTES[mode] || ROUTES.all;
-      layerAll.clearLayers();
-      
-      keys.forEach((k, i) => {
-        const rec = markers.get(k);
-        if(rec){
-          rec.marker.setIcon(makeIcon(i+1));
-          rec.marker.addTo(layerAll);
+      const points = [];
+
+      keys.forEach((k, idx) => {
+        const p = POIS.find(x => x.key === k);
+        if(p) {
+          const m = L.marker(p.coords, { icon: createIcon(idx + 1) })
+            .bindPopup(createPopup(p));
+          layerGroup.addLayer(m);
+          markers.set(k, m);
+          points.push(p.coords);
         }
       });
 
-      const pts = keys.map(k => markers.get(k)?.latlng).filter(Boolean);
-      if(pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.3));
-
-      // Draw lines for logic routes
-      if(['fri','sat','return','food'].includes(mode)) drawRoute(keys);
-      else clearRoute();
-    }
-
-    // --- Localisation ---
-    let meMarker = null;
-    function locateMe(){
-      if(!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(pos => {
-        const ll = [pos.coords.latitude, pos.coords.longitude];
-        if(meMarker) meMarker.remove();
-        meMarker = L.circleMarker(ll, { radius: 8, color: 'white', weight: 2, fillColor: '#30d158', fillOpacity: 1 }).addTo(map);
-        map.setView(ll, 15);
-      }, err => console.log(err), { enableHighAccuracy: true });
-    }
-
-    // --- Init ---
-    async function init(){
-      for (const p of POIS){
-        let latlng = p.fallback;
-        // Optionnel: Décommenter si tu veux vraiment re-géocoder à chaque chargement (lent)
-        // const geo = await geocode(p.address);
-        // if(geo) latlng = geo;
-        makeMarker(p, latlng);
+      // Fit bounds
+      if(points.length > 0) {
+        map.fitBounds(L.latLngBounds(points), { padding: [30, 30], maxZoom: 16 });
       }
 
-      // Events
-      ['All','Fri','Sat','Sun','Food','Return'].forEach(k => {
-        const id = 'btn' + k;
-        document.getElementById(id).addEventListener('click', () => updateMap(k.toLowerCase()));
-      });
-      
-      document.getElementById('btnLocate').addEventListener('click', locateMe);
-
-      document.body.addEventListener('click', (ev) => {
-        const btn = ev.target.closest('button[data-focus]');
-        if(btn && markers.get(btn.dataset.focus)){
-          const rec = markers.get(btn.dataset.focus);
-          map.setView(rec.latlng, 16);
-          rec.marker.openPopup();
-          // Scroll to top mobile UX
-          window.scrollTo({top:0, behavior:'smooth'}); 
-        }
-      });
-
-      updateMap('all');
+      // Draw lines for specific days
+      if(['fri','sat','return','food'].includes(mode) && points.length > 1) {
+        routePolyline = L.polyline(points, { 
+          color: '#0a84ff', 
+          weight: 3, 
+          opacity: 0.7, 
+          dashArray: '5, 10',
+          smoothFactor: 1
+        }).addTo(map);
+      }
     }
 
-    init();
+    // 5. EVENTS SETUP (Immediate)
+    // Setup Filter Buttons
+    ['All','Fri','Sat','Sun','Food','Return'].forEach(k => {
+      const el = document.getElementById('btn' + k);
+      if(el) el.addEventListener('click', () => renderMap(k.toLowerCase()));
+    });
+
+    // Setup "Zoom" buttons inside content
+    document.body.addEventListener('click', (e) => {
+      if(e.target.dataset.focus) {
+        const key = e.target.dataset.focus;
+        const p = POIS.find(x => x.key === key);
+        if(p) {
+          map.setView(p.coords, 17);
+          // Petite astuce pour ouvrir la popup après le zoom
+          setTimeout(() => {
+            markers.get(key).openPopup();
+          }, 300);
+          window.scrollTo({top:0, behavior:'smooth'});
+        }
+      }
+    });
+
+    // Setup Geolocation
+    document.getElementById('btnLocate').addEventListener('click', () => {
+      if(!navigator.geolocation) {
+        alert("Géolocalisation non supportée.");
+        return;
+      }
+      
+      const btn = document.getElementById('btnLocate');
+      btn.innerHTML = '⌛'; // Loading state
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btn.innerHTML = '📍';
+          const ll = [pos.coords.latitude, pos.coords.longitude];
+          
+          if(meMarker) meMarker.remove();
+          meMarker = L.circleMarker(ll, {
+            radius: 8, color: 'white', weight: 3, fillColor: '#0a84ff', fillOpacity: 1
+          }).addTo(map).bindPopup("Vous êtes ici").openPopup();
+          
+          map.setView(ll, 15);
+        },
+        (err) => {
+          btn.innerHTML = '📍';
+          console.warn(err);
+          alert("Impossible de vous localiser.\nAstuce : Sur iPhone, la page doit être ouverte en HTTPS (sécurisé) pour que le GPS fonctionne.");
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    });
+
+    // 6. START
+    // Render default view immediately
+    renderMap('all');
+
+    // Force map resize check (fixes styling glitches on some phones)
+    setTimeout(() => { map.invalidateSize(); }, 200);
+
   </script>
 </body>
 </html>
